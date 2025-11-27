@@ -10,10 +10,22 @@ export async function updateSession(request: NextRequest) {
 
     if (!supabaseUrl || !supabaseKey) {
         console.error('Middleware: Missing Supabase environment variables')
-        return NextResponse.json(
-            { error: 'Internal Server Error: Missing Supabase configuration' },
-            { status: 500 }
-        )
+        // En lugar de fallar, permitimos que pase para ver si es un problema de carga
+        // Pero retornamos un error claro si intentan usar auth
+        if (request.nextUrl.pathname.startsWith('/auth') || request.nextUrl.pathname === '/') {
+            return NextResponse.json(
+                {
+                    error: 'Configuration Error',
+                    message: 'Missing Supabase environment variables. Please check Vercel settings.',
+                    details: {
+                        hasUrl: !!supabaseUrl,
+                        hasKey: !!supabaseKey
+                    }
+                },
+                { status: 500 }
+            )
+        }
+        return NextResponse.next({ request })
     }
 
     const supabase = createServerClient(
