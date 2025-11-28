@@ -1,4 +1,5 @@
 "use client"
+export const dynamic = "force-dynamic"
 
 import { useState, useMemo, useEffect, useCallback } from "react"
 import { motion, AnimatePresence } from "framer-motion"
@@ -141,7 +142,7 @@ export default function ExpenseSplitter() {
 
     let balance = 0
 
-    currentGroup.expenses.forEach((expense) => {
+    currentGroup.expenses?.forEach((expense) => {
       const paidByMe = expense.paidBy.includes(currentUser.username)
       const splitCount = expense.participants.length
       const payerCount = expense.paidBy.length
@@ -160,7 +161,7 @@ export default function ExpenseSplitter() {
 
   // Simplified Settlements Logic
   const settlements = useMemo(() => {
-    if (!currentGroup) return []
+    if (!currentGroup?.members) return []
 
     const balances: Record<string, number> = {}
 
@@ -168,7 +169,7 @@ export default function ExpenseSplitter() {
       balances[member] = 0
     })
 
-    currentGroup.expenses.forEach((expense) => {
+    currentGroup.expenses?.forEach((expense) => {
       const amount = expense.amount
       const splitCount = expense.participants.length
       const payerCount = expense.paidBy.length
@@ -330,16 +331,118 @@ export default function ExpenseSplitter() {
     }
   }
 
-  // ...
+  const handleAddMember = async (username: string) => {
+    if (!currentGroup) return
 
-  const formattedMembers = currentGroup.members.map(m => {
+    const { error } = await groupService.addMember(currentGroup.id, username.trim().toLowerCase())
+    if (error) {
+      alert(error)
+    } else {
+      await loadData()
+    }
+  }
+
+  const handleRemoveMember = async (username: string) => {
+    if (!currentGroup) return
+
+    const { error } = await groupService.removeMember(currentGroup.id, username)
+    if (!error) {
+      await loadData()
+    }
+  }
+
+  const handleUpdateGroup = async (name: string, emoji: string) => {
+    if (!currentGroup) return
+
+    const { error } = await groupService.updateGroup(currentGroup.id, { name, emoji })
+    if (!error) {
+      await loadData()
+    }
+  }
+
+  const handleDeleteGroup = async () => {
+    if (!currentGroup) return
+
+    const { error } = await groupService.deleteGroup(currentGroup.id)
+    if (!error) {
+      setSelectedGroupId(null)
+      await loadData()
+      setIsManageGroupOpen(false)
+    }
+  }
+
+  const handleUpdateProfile = async (name: string, avatarUrl: string | null) => {
+    if (!currentUser) return
+
+    const { error } = await userService.updateProfile(currentUser.id, {
+      displayName: name,
+      avatarUrl: avatarUrl || undefined,
+    })
+
+    if (!error) {
+      await loadData()
+    }
+  }
+
+  const handleLogout = async () => {
+    await authService.signOut()
+    router.push("/auth/login")
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+          className="w-8 h-8 border-2 border-foreground border-t-transparent rounded-full"
+        />
+      </div>
+    )
+  }
+
+  if (groups.length === 0) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 text-center">
+        <div className="max-w-md w-full space-y-8">
+          <div className="space-y-2">
+            <h1 className="text-3xl font-bold">¡Bienvenido, {currentUser?.displayName}!</h1>
+            <p className="text-muted-foreground">Aún no tienes ningún grupo.</p>
+          </div>
+          <Button
+            onClick={() => setIsCreateGroupOpen(true)}
+            className="w-full h-14 text-lg rounded-2xl"
+          >
+            <Plus className="mr-2 h-5 w-5" />
+            Crear tu primer grupo
+          </Button>
+        </div>
+        <CreateGroupModal
+          isOpen={isCreateGroupOpen}
+          onClose={() => setIsCreateGroupOpen(false)}
+          onCreate={handleCreateGroup}
+        />
+      </div>
+    )
+  }
+
+  if (!currentGroup) return null
+
+  const groupsForSelector = groups?.map((g) => ({
+    id: g.id,
+    name: g.name,
+    emoji: g.emoji,
+    membersCount: g.members?.length || 0,
+  })) || []
+
+  const formattedMembers = currentGroup?.members?.map(m => {
     const details = currentGroup.memberDetails?.find(d => d.username === m)
     return {
       id: m,
       name: m.toLowerCase() === currentUser?.username.toLowerCase() ? `${m} (You)` : m,
       avatarUrl: details?.avatarUrl || null,
     }
-  })
+  }) || []
 
   return (
     <div className="min-h-screen bg-background">
