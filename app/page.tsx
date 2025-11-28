@@ -446,94 +446,191 @@ export default function ExpenseSplitter() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* ... header ... */}
-      {/* Expenses List */}
-      <section className="px-4">
-        <div className="flex items-center justify-between px-2 mb-4">
-          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Gastos</h2>
-          <span className="text-xs text-muted-foreground">
-            {currentGroup.expenses.length} gasto{currentGroup.expenses.length !== 1 ? "s" : ""}
-          </span>
-        </div>
-
-        <div className="space-y-3">
-          <AnimatePresence mode="popLayout">
-            {currentGroup.expenses.map((expense, index) => (
-              <ExpenseCard
-                key={expense.id}
-                title={expense.title}
-                amount={expense.amount}
-                paidBy={expense.paidBy}
-                participants={expense.participants.map(p => {
-                  const details = currentGroup.memberDetails?.find(d => d.username === p)
-                  return {
-                    username: p,
-                    avatarUrl: details?.avatarUrl || null,
-                  }
-                })}
-                date={expense.date}
-                index={index}
-                currentUserId={currentUser?.username}
-                onDelete={() => handleDeleteExpense(expense.id)}
-              />
-            ))}
-          </AnimatePresence>
-
-          {currentGroup.expenses.length === 0 && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-center py-12 text-muted-foreground"
+      <div className="max-w-md mx-auto pb-32">
+        {/* Header */}
+        <motion.header
+          className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl border-b border-border/50"
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.3 }}
+        >
+          <div className="flex items-center justify-between p-4">
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setIsManageGroupOpen(true)}
+              className="flex items-center gap-2 px-3 py-2 rounded-xl bg-muted/50 hover:bg-muted transition-colors"
             >
-              <p className="text-lg font-medium">Aún no hay gastos</p>
-              <p className="text-sm mt-1">Agrega tu primer gasto para comenzar</p>
-            </motion.div>
-          )}
-        </div>
-      </section>
+              <Users className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm font-medium text-foreground">{currentGroup.members.length}</span>
+            </motion.button>
 
-      {/* Modals */}
-      <AddExpenseModal
-        isOpen={isAddExpenseOpen}
-        onClose={() => setIsAddExpenseOpen(false)}
-        onAdd={handleAddExpense}
-        members={formattedMembers}
-        currentUserId={currentUser?.username || ""}
-      />
-      <ManageGroupModal
-        isOpen={isManageGroupOpen}
-        onClose={() => setIsManageGroupOpen(false)}
-        members={formattedMembers}
-        groupName={currentGroup.name}
-        groupEmoji={currentGroup.emoji}
-        totalExpenses={currentGroup.expenses.reduce((sum, expense) => sum + expense.amount, 0)}
-        onAddMember={handleAddMember}
-        onRemoveMember={handleRemoveMember}
-        onUpdateGroup={handleUpdateGroup}
-        onDeleteGroup={handleDeleteGroup}
-      />
-      <SettleModal
-        isOpen={isSettleOpen}
-        onClose={() => setIsSettleOpen(false)}
-        settlements={settlements}
-        simplifiedSettlements={settlements}
-        onSettle={handleSettle}
-      />
-      <CreateGroupModal
-        isOpen={isCreateGroupOpen}
-        onClose={() => setIsCreateGroupOpen(false)}
-        onCreate={handleCreateGroup}
-      />
-      <ProfileModal
-        isOpen={isProfileOpen}
-        onClose={() => setIsProfileOpen(false)}
-        profile={{
-          id: currentUser?.username || "",
-          display_name: currentUser?.displayName || "",
-          avatar_url: currentUser?.avatarUrl || null
-        }}
-        onUpdateProfile={handleUpdateProfile}
-      />
-    </div >
+            <GroupSelector
+              groups={groupsForSelector}
+              selectedGroup={groupsForSelector.find((g) => g.id === selectedGroupId) || groupsForSelector[0]}
+              onSelectGroup={(g) => setSelectedGroupId(g.id)}
+              onCreateGroup={() => setIsCreateGroupOpen(true)}
+            />
+
+            <div className="flex items-center gap-2">
+              <motion.button whileTap={{ scale: 0.95 }} onClick={() => setIsProfileOpen(true)} className="relative">
+                <Avatar className="h-9 w-9 border-2 border-border/50">
+                  <AvatarImage src={currentUser?.avatarUrl || undefined} />
+                  <AvatarFallback className="text-xs bg-muted font-medium">
+                    {currentUser?.displayName.slice(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+              </motion.button>
+            </div>
+          </div>
+        </motion.header>
+
+        {/* Balance Section */}
+        <motion.section
+          className="px-6 pt-8 pb-6"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.1 }}
+        >
+          <p className="text-sm text-muted-foreground text-center mb-2">Tu balance</p>
+          <AnimatedNumber value={userBalance} className="text-5xl font-bold tracking-tight" />
+          <motion.div
+            className="flex items-center justify-center gap-2 mt-3"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+          >
+            {Math.abs(userBalance) < 0.01 ? (
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted text-muted-foreground">
+                <span className="text-xs font-medium">Saldado</span>
+              </div>
+            ) : userBalance > 0 ? (
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">
+                <TrendingUp className="h-3.5 w-3.5" />
+                <span className="text-xs font-medium">Te deben</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-destructive/20 text-destructive">
+                <TrendingDown className="h-3.5 w-3.5" />
+                <span className="text-xs font-medium">Debes</span>
+              </div>
+            )}
+          </motion.div>
+        </motion.section>
+
+        {/* Action Buttons */}
+        <motion.section
+          className="px-6 pb-6"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+        >
+          <div className="flex gap-3">
+            <Button
+              onClick={() => setIsSettleOpen(true)}
+              variant="outline"
+              className="flex-1 h-14 rounded-2xl font-semibold border-border/50 hover:bg-muted/50 transition-all"
+            >
+              <ArrowDownUp className="h-5 w-5 mr-2" />
+              Saldar
+            </Button>
+            <Button
+              onClick={() => setIsAddExpenseOpen(true)}
+              className="flex-[2] h-14 rounded-2xl font-semibold bg-foreground text-background hover:bg-foreground/90 transition-all"
+            >
+              <Plus className="h-5 w-5 mr-2" />
+              Agregar Gasto
+            </Button>
+          </div>
+        </motion.section>
+
+        {/* Expenses List */}
+        <section className="px-4">
+          <div className="flex items-center justify-between px-2 mb-4">
+            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Gastos</h2>
+            <span className="text-xs text-muted-foreground">
+              {currentGroup.expenses.length} gasto{currentGroup.expenses.length !== 1 ? "s" : ""}
+            </span>
+          </div>
+
+          <div className="space-y-3">
+            <AnimatePresence mode="popLayout">
+              {currentGroup.expenses.map((expense, index) => (
+                <ExpenseCard
+                  key={expense.id}
+                  title={expense.title}
+                  amount={expense.amount}
+                  paidBy={expense.paidBy}
+                  participants={expense.participants.map(p => {
+                    const details = currentGroup.memberDetails?.find(d => d.username === p)
+                    return {
+                      username: p,
+                      avatarUrl: details?.avatarUrl || null,
+                    }
+                  })}
+                  date={expense.date}
+                  index={index}
+                  currentUserId={currentUser?.username}
+                  onDelete={() => handleDeleteExpense(expense.id)}
+                />
+              ))}
+            </AnimatePresence>
+
+            {currentGroup.expenses.length === 0 && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-center py-12 text-muted-foreground"
+              >
+                <p className="text-lg font-medium">Aún no hay gastos</p>
+                <p className="text-sm mt-1">Agrega tu primer gasto para comenzar</p>
+              </motion.div>
+            )}
+          </div>
+        </section>
+
+        {/* Modals */}
+        <AddExpenseModal
+          isOpen={isAddExpenseOpen}
+          onClose={() => setIsAddExpenseOpen(false)}
+          onAdd={handleAddExpense}
+          members={formattedMembers}
+          currentUserId={currentUser?.username || ""}
+        />
+        <ManageGroupModal
+          isOpen={isManageGroupOpen}
+          onClose={() => setIsManageGroupOpen(false)}
+          members={formattedMembers}
+          groupName={currentGroup.name}
+          groupEmoji={currentGroup.emoji}
+          totalExpenses={currentGroup.expenses.reduce((sum, expense) => sum + expense.amount, 0)}
+          onAddMember={handleAddMember}
+          onRemoveMember={handleRemoveMember}
+          onUpdateGroup={handleUpdateGroup}
+          onDeleteGroup={handleDeleteGroup}
+        />
+        <SettleModal
+          isOpen={isSettleOpen}
+          onClose={() => setIsSettleOpen(false)}
+          settlements={settlements}
+          simplifiedSettlements={settlements}
+          onSettle={handleSettle}
+        />
+        <CreateGroupModal
+          isOpen={isCreateGroupOpen}
+          onClose={() => setIsCreateGroupOpen(false)}
+          onCreate={handleCreateGroup}
+        />
+        <ProfileModal
+          isOpen={isProfileOpen}
+          onClose={() => setIsProfileOpen(false)}
+          profile={{
+            id: currentUser?.username || "",
+            display_name: currentUser?.displayName || "",
+            avatar_url: currentUser?.avatarUrl || null
+          }}
+          onUpdateProfile={handleUpdateProfile}
+        />
+      </div>
+    </div>
   )
 }
