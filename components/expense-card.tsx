@@ -1,8 +1,9 @@
 "use client"
-import { motion } from "framer-motion"
+import { motion, useMotionValue, useTransform, PanInfo } from "framer-motion"
 import { UserAvatar } from "@/components/user-avatar"
 import { Trash2 } from "lucide-react"
 import { formatDate } from "@/lib/utils"
+import { useState } from "react"
 
 interface ExpenseCardProps {
   title: string
@@ -15,6 +16,13 @@ interface ExpenseCardProps {
 }
 
 export function ExpenseCard({ title, amount, paidBy, participants, date, index, onDelete }: ExpenseCardProps) {
+  const [isOpen, setIsOpen] = useState(false)
+  const x = useMotionValue(0)
+
+  // Transformar la opacidad del icono de basura basado en la posición x
+  const iconOpacity = useTransform(x, [0, -40, -80], [0, 0.5, 1])
+  const iconScale = useTransform(x, [0, -80], [0.5, 1])
+
   const paidByText =
     paidBy.length === 1
       ? paidBy[0]
@@ -22,44 +30,59 @@ export function ExpenseCard({ title, amount, paidBy, participants, date, index, 
         ? `${paidBy[0]} y ${paidBy[1]}`
         : `${paidBy[0]} +${paidBy.length - 1}`
 
-  // Determinar el texto del monto por participante
   const amountPerParticipant = amount / participants.length
   const amountText = participants.length === 1
     ? `$${amount.toFixed(2)} solo para ti`
     : `$${amountPerParticipant.toFixed(2)} cada uno`
 
-  const handleDelete = () => {
-    if (confirm('¿Estás seguro de que quieres eliminar este gasto?')) {
+  const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+    const threshold = -60
+    const deleteThreshold = -150
+
+    if (info.offset.x < deleteThreshold) {
+      // Swipe largo -> Borrar directo
       onDelete?.()
+    } else if (info.offset.x < threshold) {
+      // Swipe medio -> Abrir
+      setIsOpen(true)
+    } else {
+      // Swipe corto -> Cerrar
+      setIsOpen(false)
     }
   }
 
   return (
-    <div className="relative group touch-pan-y">
-      {/* Fondo rojo para swipe (solo visible al deslizar) */}
-      <div className="absolute inset-0 bg-destructive rounded-2xl flex items-center justify-end px-6 mb-4">
-        <Trash2 className="h-6 w-6 text-destructive-foreground" />
+    <div className="relative group touch-pan-y mb-3">
+      {/* Fondo rojo con botón de eliminar */}
+      <div className="absolute inset-0 bg-destructive rounded-2xl flex items-center justify-end pr-6 overflow-hidden">
+        <motion.button
+          style={{ opacity: iconOpacity, scale: iconScale }}
+          onClick={() => onDelete?.()}
+          className="flex items-center justify-center"
+          aria-label="Eliminar"
+        >
+          <Trash2 className="h-6 w-6 text-destructive-foreground" />
+        </motion.button>
       </div>
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0, x: 0 }}
+        animate={{
+          opacity: 1,
+          y: 0,
+          x: isOpen ? -80 : 0
+        }}
+        style={{ x }}
         drag="x"
-        dragConstraints={{ left: -100, right: 0 }}
-        dragElastic={0.1}
-        onDragEnd={(e, { offset, velocity }) => {
-          // Si se desliza suficiente a la izquierda, confirmar eliminación
-          if (offset.x < -80) {
-            handleDelete()
-          }
-        }}
+        dragConstraints={{ left: -200, right: 0 }}
+        dragElastic={{ right: 0.1, left: 0.5 }}
+        onDragEnd={handleDragEnd}
         transition={{
-          duration: 0.3,
-          delay: index * 0.05,
-          ease: [0.25, 0.1, 0.25, 1],
+          type: "spring",
+          stiffness: 400,
+          damping: 30
         }}
-        className="bg-card rounded-2xl p-5 shadow-sm border border-border/50 active:scale-[0.98] transition-transform relative z-10"
-        style={{ x: 0 }}
+        className="bg-card rounded-2xl p-5 shadow-sm border border-border/50 relative z-10"
       >
         <div className="flex items-start justify-between gap-4">
           <div className="flex flex-col gap-0.5">
@@ -96,12 +119,14 @@ export function ExpenseCard({ title, amount, paidBy, participants, date, index, 
           </span>
         </div>
 
-        {/* Botón de eliminar para Desktop (hover) */}
+        {/* Botón de eliminar para Desktop (hover) - Solo visible si no es touch device idealmente, 
+            pero lo mantenemos oculto en mobile via media query si fuera necesario. 
+            Aquí usamos group-hover que funciona bien en desktop. */}
         {onDelete && (
           <button
             onClick={(e) => {
               e.stopPropagation()
-              handleDelete()
+              onDelete()
             }}
             className="absolute -top-2 -right-2 p-2 rounded-full bg-destructive text-destructive-foreground shadow-lg opacity-0 group-hover:opacity-100 transition-opacity hidden md:block"
             aria-label="Eliminar gasto"

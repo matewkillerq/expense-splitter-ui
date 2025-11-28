@@ -13,7 +13,6 @@ import { authService } from "@/lib/services/auth.service"
 
 export default function SignUpPage() {
   const [username, setUsername] = useState("")
-  const [displayName, setDisplayName] = useState("")
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -25,13 +24,13 @@ export default function SignUpPage() {
     setError(null)
 
     try {
-      if (!username.trim() || !displayName.trim() || !password) {
+      if (!username.trim() || !password) {
         throw new Error("Todos los campos son requeridos")
       }
 
       const { user, error: signUpError } = await authService.signUp({
         username: username.trim(),
-        displayName: displayName.trim(),
+        displayName: username.trim(), // Usar username como display name inicial
         password,
       })
 
@@ -82,22 +81,12 @@ export default function SignUpPage() {
                 className="h-14 text-lg rounded-xl border-border/50 bg-muted/30"
                 required
               />
+              <p className="text-xs text-muted-foreground mt-2">
+                No necesitas email. Solo elige un nombre de usuario único para que tus amigos te encuentren.
+              </p>
             </div>
 
-            <div>
-              <label htmlFor="displayName" className="text-sm font-medium text-muted-foreground mb-2 block">
-                Nombre para mostrar
-              </label>
-              <Input
-                id="displayName"
-                type="text"
-                placeholder="John Doe"
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-                className="h-14 text-lg rounded-xl border-border/50 bg-muted/30"
-                required
-              />
-            </div>
+            {/* Display Name removed */}
 
             <div>
               <label htmlFor="password" className="text-sm font-medium text-muted-foreground mb-2 block">
