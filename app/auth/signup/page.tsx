@@ -26,7 +26,7 @@ export default function SignUpPage() {
 
     try {
       if (!username.trim() || !displayName.trim() || !password) {
-        throw new Error("All fields are required")
+        throw new Error("Todos los campos son requeridos")
       }
 
       const { user, error: signUpError } = await authService.signUp({
@@ -36,12 +36,12 @@ export default function SignUpPage() {
       })
 
       if (signUpError) throw new Error(signUpError)
-      if (!user) throw new Error("Failed to create account")
+      if (!user) throw new Error("Error al crear la cuenta")
 
       // Redirigir al dashboard
       router.push("/")
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "An error occurred")
+      setError(error instanceof Error ? error.message : "Ocurrió un error")
     } finally {
       setIsLoading(false)
     }
@@ -58,20 +58,20 @@ export default function SignUpPage() {
         <Link href="/auth/login">
           <Button variant="ghost" className="mb-8 -ml-4">
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to login
+            Volver al inicio de sesión
           </Button>
         </Link>
 
         <div className="space-y-2 mb-8">
-          <h1 className="text-4xl font-bold tracking-tight">Create account</h1>
-          <p className="text-muted-foreground">Start splitting expenses with your friends</p>
+          <h1 className="text-4xl font-bold tracking-tight">Crear cuenta</h1>
+          <p className="text-muted-foreground">Comienza a dividir gastos con tus amigos</p>
         </div>
 
         <form onSubmit={handleSignUp} className="space-y-6">
           <div className="space-y-4">
             <div>
               <label htmlFor="username" className="text-sm font-medium text-muted-foreground mb-2 block">
-                Username
+                Nombre de usuario
               </label>
               <Input
                 id="username"
@@ -86,7 +86,7 @@ export default function SignUpPage() {
 
             <div>
               <label htmlFor="displayName" className="text-sm font-medium text-muted-foreground mb-2 block">
-                Display Name
+                Nombre para mostrar
               </label>
               <Input
                 id="displayName"
@@ -101,7 +101,7 @@ export default function SignUpPage() {
 
             <div>
               <label htmlFor="password" className="text-sm font-medium text-muted-foreground mb-2 block">
-                Password
+                Contraseña
               </label>
               <Input
                 id="password"
@@ -130,13 +130,13 @@ export default function SignUpPage() {
             disabled={isLoading}
             className="w-full h-14 text-lg font-semibold rounded-xl bg-foreground text-background hover:bg-foreground/90 transition-all"
           >
-            {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Create account"}
+            {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Crear cuenta"}
           </Button>
         </form>
         <p className="text-center text-sm text-muted-foreground">
-          Already have an account?{" "}
+          ¿Ya tienes cuenta?{" "}
           <Link href="/auth/login" className="text-foreground font-medium hover:underline">
-            Sign in
+            Iniciar sesión
           </Link>
         </p>
       </motion.div>

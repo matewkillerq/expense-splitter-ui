@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect, useCallback } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Plus, ArrowDownUp, TrendingUp, TrendingDown, Users, RefreshCw } from "lucide-react"
+import { Plus, ArrowDownUp, TrendingUp, TrendingDown, Users } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { AnimatedNumber } from "@/components/animated-number"
@@ -18,6 +18,7 @@ import { authService, type User } from "@/lib/services/auth.service"
 import { groupService, type Group } from "@/lib/services/group.service"
 import { expenseService } from "@/lib/services/expense.service"
 import { userService } from "@/lib/services/user.service"
+import { createClient } from "@/lib/supabase/client"
 
 export default function ExpenseSplitter() {
   const [groups, setGroups] = useState<Group[]>([])
@@ -30,7 +31,7 @@ export default function ExpenseSplitter() {
   const [isCreateGroupOpen, setIsCreateGroupOpen] = useState(false)
   const [isProfileOpen, setIsProfileOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
-  const [isRefreshing, setIsRefreshing] = useState(false)
+  // isRefreshing removed as it is no longer needed
 
   const router = useRouter()
 
@@ -63,15 +64,38 @@ export default function ExpenseSplitter() {
     }
   }, [router, selectedGroupId])
 
+  // Real-time updates
+  useEffect(() => {
+    if (!selectedGroupId) return
+
+    const supabase = createClient()
+
+    const channel = supabase
+      .channel(`group-${selectedGroupId}`)
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'expenses', filter: `group_id=eq.${selectedGroupId}` },
+        () => loadData()
+      )
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'group_members', filter: `group_id=eq.${selectedGroupId}` },
+        () => loadData()
+      )
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'groups', filter: `id=eq.${selectedGroupId}` },
+        () => loadData()
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [selectedGroupId, loadData])
+
   useEffect(() => {
     loadData().then(() => setIsLoading(false))
   }, [loadData])
 
-  const handleRefresh = async () => {
-    setIsRefreshing(true)
-    await loadData()
-    setIsRefreshing(false)
-  }
+  // handleRefresh removed as it is no longer needed
 
   const currentGroup = groups.find((g) => g.id === selectedGroupId)
 
@@ -373,15 +397,6 @@ export default function ExpenseSplitter() {
             />
 
             <div className="flex items-center gap-2">
-              <motion.button
-                whileTap={{ scale: 0.95 }}
-                onClick={handleRefresh}
-                disabled={isRefreshing}
-                className="p-2 rounded-xl bg-muted/50 hover:bg-muted transition-colors disabled:opacity-50"
-                aria-label="Actualizar"
-              >
-                <RefreshCw className={`h-4 w-4 text-muted-foreground ${isRefreshing ? 'animate-spin' : ''}`} />
-              </motion.button>
               <motion.button whileTap={{ scale: 0.95 }} onClick={() => setIsProfileOpen(true)} className="relative">
                 <Avatar className="h-9 w-9 border-2 border-border/50">
                   <AvatarImage src={currentUser?.avatarUrl || undefined} />

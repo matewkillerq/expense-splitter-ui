@@ -25,11 +25,11 @@ export default function LoginPage() {
       const { user, error: loginError } = await authService.signIn(username.trim(), password)
 
       if (loginError) throw new Error(loginError)
-      if (!user) throw new Error("Failed to login")
+      if (!user) throw new Error("Error al iniciar sesión")
 
       router.push("/")
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "An error occurred")
+      setError(error instanceof Error ? error.message : "Ocurrió un error")
     } finally {
       setIsLoading(false)
     }
@@ -44,15 +44,15 @@ export default function LoginPage() {
         className="w-full max-w-md"
       >
         <div className="space-y-2 mb-8">
-          <h1 className="text-4xl font-bold tracking-tight">Welcome back</h1>
-          <p className="text-muted-foreground">Sign in to your account to continue</p>
+          <h1 className="text-4xl font-bold tracking-tight">Bienvenido de nuevo</h1>
+          <p className="text-muted-foreground">Inicia sesión en tu cuenta para continuar</p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-6">
           <div className="space-y-4">
             <div>
               <label htmlFor="username" className="text-sm font-medium text-muted-foreground mb-2 block">
-                Username
+                Nombre de usuario
               </label>
               <Input
                 id="username"
@@ -67,7 +67,7 @@ export default function LoginPage() {
 
             <div>
               <label htmlFor="password" className="text-sm font-medium text-muted-foreground mb-2 block">
-                Password
+                Contraseña
               </label>
               <Input
                 id="password"
@@ -96,14 +96,14 @@ export default function LoginPage() {
             disabled={isLoading}
             className="w-full h-14 text-lg font-semibold rounded-xl bg-foreground text-background hover:bg-foreground/90 transition-all"
           >
-            {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Sign in"}
+            {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Iniciar sesión"}
           </Button>
         </form>
 
         <p className="text-center text-sm text-muted-foreground mt-6">
-          Don't have an account?{" "}
+          ¿No tienes cuenta?{" "}
           <Link href="/auth/signup" className="text-foreground font-medium hover:underline">
-            Sign up
+            Regístrate
           </Link>
         </p>
       </motion.div>
