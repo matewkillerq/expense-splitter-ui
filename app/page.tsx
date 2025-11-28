@@ -64,7 +64,7 @@ export default function ExpenseSplitter() {
     }
   }, [router, selectedGroupId])
 
-  // Real-time updates
+  // Real-time updates for active group
   useEffect(() => {
     if (!selectedGroupId) return
 
@@ -74,15 +74,24 @@ export default function ExpenseSplitter() {
       .channel(`group-${selectedGroupId}`)
       .on('postgres_changes',
         { event: '*', schema: 'public', table: 'expenses', filter: `group_id=eq.${selectedGroupId}` },
-        () => loadData()
+        () => {
+          console.log('Realtime update: expenses changed')
+          loadData()
+        }
       )
       .on('postgres_changes',
         { event: '*', schema: 'public', table: 'group_members', filter: `group_id=eq.${selectedGroupId}` },
-        () => loadData()
+        () => {
+          console.log('Realtime update: group members changed')
+          loadData()
+        }
       )
       .on('postgres_changes',
         { event: '*', schema: 'public', table: 'groups', filter: `id=eq.${selectedGroupId}` },
-        () => loadData()
+        () => {
+          console.log('Realtime update: group details changed')
+          loadData()
+        }
       )
       .subscribe()
 
@@ -90,6 +99,33 @@ export default function ExpenseSplitter() {
       supabase.removeChannel(channel)
     }
   }, [selectedGroupId, loadData])
+
+  // Real-time updates for user (new groups/invites)
+  useEffect(() => {
+    if (!currentUser) return
+
+    const supabase = createClient()
+
+    const channel = supabase
+      .channel(`user-${currentUser.username}`)
+      .on('postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'group_members',
+          filter: `username=eq.${currentUser.username}`
+        },
+        () => {
+          console.log('Realtime update: user added/removed from group')
+          loadData()
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [currentUser, loadData])
 
   useEffect(() => {
     loadData().then(() => setIsLoading(false))
