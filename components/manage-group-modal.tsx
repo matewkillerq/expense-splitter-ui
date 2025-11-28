@@ -45,7 +45,7 @@ export function ManageGroupModal({
     }
   }
 
-  const handleSaveGroup = () => {
+  const handleGuardarGroup = () => {
     if (tempGroupName.trim()) {
       onUpdateGroup(tempGroupName.trim(), tempGroupEmoji)
       setEditingGroup(false)
@@ -77,7 +77,7 @@ export function ManageGroupModal({
                   <div className="p-2 rounded-xl bg-primary/10">
                     <Users className="h-5 w-5 text-primary" />
                   </div>
-                  <h2 className="text-xl font-bold text-foreground">Manage Group</h2>
+                  <h2 className="text-xl font-bold text-foreground">Administrar Grupo</h2>
                 </div>
                 <motion.button
                   whileTap={{ scale: 0.9 }}
@@ -109,18 +109,18 @@ export function ManageGroupModal({
                       value={tempGroupName}
                       onChange={(e) => setTempGroupName(e.target.value)}
                       className="h-12 rounded-xl border-border/50 bg-card"
-                      placeholder="Group name"
+                      placeholder="Nombre del grupo"
                     />
                     <div className="flex gap-2">
-                      <Button onClick={handleSaveGroup} className="flex-1 h-10 rounded-xl">
-                        Save
+                      <Button onClick={handleGuardarGroup} className="flex-1 h-10 rounded-xl">
+                        Guardar
                       </Button>
                       <Button
                         onClick={() => setEditingGroup(false)}
                         variant="outline"
                         className="flex-1 h-10 rounded-xl"
                       >
-                        Cancel
+                        Cancelar
                       </Button>
                     </div>
                   </div>
@@ -143,10 +143,10 @@ export function ManageGroupModal({
                 )}
               </div>
 
-              {/* Add Member */}
+              {/* Agregar Miembro */}
               <div className="flex gap-2">
                 <Input
-                  placeholder="Add member (username)"
+                  placeholder="Agregar miembro (nombre de usuario)"
                   value={newMemberName}
                   onChange={(e) => setNewMemberName(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleAddMember()}
@@ -161,7 +161,7 @@ export function ManageGroupModal({
                 </Button>
               </div>
 
-              {/* Members List */}
+              {/* Miembros List */}
               <div className="space-y-2 max-h-[250px] overflow-y-auto">
                 <AnimatePresence mode="popLayout">
                   {members.map((member, index) => (
@@ -209,7 +209,7 @@ export function ManageGroupModal({
                       className="w-full text-destructive hover:text-destructive hover:bg-destructive/10"
                     >
                       <Trash2 className="h-4 w-4 mr-2" />
-                      Delete Group
+                      Eliminar Grupo
                     </Button>
                   ) : (
                     <div className="space-y-2">

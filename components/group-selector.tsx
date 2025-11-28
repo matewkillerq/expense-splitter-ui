@@ -60,9 +60,8 @@ export function GroupSelector({ groups, selectedGroup, onSelectGroup, onCreateGr
                       onSelectGroup(group)
                       setIsOpen(false)
                     }}
-                    className={`w-full flex items-center justify-between p-3 rounded-xl transition-colors ${
-                      selectedGroup.id === group.id ? "bg-primary/10" : "hover:bg-muted/50"
-                    }`}
+                    className={`w-full flex items-center justify-between p-3 rounded-xl transition-colors ${selectedGroup.id === group.id ? "bg-primary/10" : "hover:bg-muted/50"
+                      }`}
                     whileTap={{ scale: 0.98 }}
                   >
                     <div className="flex items-center gap-3">
@@ -71,7 +70,7 @@ export function GroupSelector({ groups, selectedGroup, onSelectGroup, onCreateGr
                         <p className="font-medium text-foreground">{group.name}</p>
                         <p className="text-xs text-muted-foreground flex items-center gap-1">
                           <Users className="h-3 w-3" />
-                          {group.membersCount} members
+                          {group.membersCount} miembro{group.membersCount !== 1 ? "s" : ""}
                         </p>
                       </div>
                     </div>
@@ -91,7 +90,7 @@ export function GroupSelector({ groups, selectedGroup, onSelectGroup, onCreateGr
                   <div className="p-1 rounded-lg bg-muted">
                     <Plus className="h-4 w-4" />
                   </div>
-                  <span className="font-medium">Create new group</span>
+                  <span className="font-medium">Crear nuevo grupo</span>
                 </motion.button>
               </div>
             </motion.div>

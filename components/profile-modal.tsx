@@ -59,7 +59,7 @@ export function ProfileModal({ isOpen, onClose, profile, onUpdateProfile }: Prof
     const file = e.target.files?.[0]
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
-        alert("File too large. Please choose an image under 5MB.")
+        alert("Archivo demasiado grande. Por favor elige una imagen menor a 5MB.")
         return
       }
       const reader = new FileReader()
@@ -92,7 +92,7 @@ export function ProfileModal({ isOpen, onClose, profile, onUpdateProfile }: Prof
           >
             <div className="p-6 space-y-6">
               <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold text-foreground">Profile</h2>
+                <h2 className="text-2xl font-bold text-foreground">Perfil</h2>
                 <motion.button
                   whileTap={{ scale: 0.9 }}
                   onClick={onClose}
@@ -121,11 +121,11 @@ export function ProfileModal({ isOpen, onClose, profile, onUpdateProfile }: Prof
                     className="hidden"
                   />
                 </div>
-                <p className="text-sm text-muted-foreground">Tap to upload photo</p>
+                <p className="text-sm text-muted-foreground">Toca para subir foto</p>
               </div>
 
               <div className="space-y-3">
-                <label className="text-sm font-medium text-muted-foreground">Or choose an emoji</label>
+                <label className="text-sm font-medium text-muted-foreground">O elige un emoji</label>
                 <div className="grid grid-cols-6 gap-2 max-h-[150px] overflow-y-auto p-1">
                   {emojiOptions.map((emoji) => (
                     <motion.button
@@ -144,11 +144,11 @@ export function ProfileModal({ isOpen, onClose, profile, onUpdateProfile }: Prof
               </div>
 
               <div className="space-y-3">
-                <label className="text-sm font-medium text-muted-foreground">Display name</label>
+                <label className="text-sm font-medium text-muted-foreground">Nombre para mostrar</label>
                 <Input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="Your name"
+                  placeholder="Tu nombre"
                   className="h-14 text-lg rounded-xl border-border/50 bg-muted/30"
                 />
               </div>
@@ -159,7 +159,7 @@ export function ProfileModal({ isOpen, onClose, profile, onUpdateProfile }: Prof
                   disabled={isLoading || !name.trim()}
                   className="w-full h-14 text-base font-semibold rounded-xl bg-foreground text-background hover:bg-foreground/90"
                 >
-                  {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Save changes"}
+                  {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Guardar cambios"}
                 </Button>
 
                 <Button
@@ -173,7 +173,7 @@ export function ProfileModal({ isOpen, onClose, profile, onUpdateProfile }: Prof
                   ) : (
                     <>
                       <LogOut className="h-5 w-5 mr-2" />
-                      Sign out
+                      Cerrar sesión
                     </>
                   )}
                 </Button>

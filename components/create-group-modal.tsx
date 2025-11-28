@@ -18,7 +18,7 @@ const groupEmojis = ["👨‍👩‍👧‍👦", "🏠", "✈️", "🍕", "�
 export function CreateGroupModal({ isOpen, onClose, onCreate }: CreateGroupModalProps) {
   const [name, setName] = useState("")
   const [emoji, setEmoji] = useState("👨‍👩‍👧‍👦")
-  const [members, setMembers] = useState<string[]>(["You"])
+  const [members, setMembers] = useState<string[]>(["Tú"])
   const [newMember, setNewMember] = useState("")
 
   const handleAddMember = () => {
@@ -29,7 +29,7 @@ export function CreateGroupModal({ isOpen, onClose, onCreate }: CreateGroupModal
   }
 
   const handleRemoveMember = (member: string) => {
-    if (member !== "You") {
+    if (member !== "Tú") {
       setMembers(members.filter((m) => m !== member))
     }
   }
@@ -39,7 +39,7 @@ export function CreateGroupModal({ isOpen, onClose, onCreate }: CreateGroupModal
       onCreate({ name: name.trim(), emoji, members })
       setName("")
       setEmoji("👨‍👩‍👧‍👦")
-      setMembers(["You"])
+      setMembers(["Tú"])
       onClose()
     }
   }
@@ -65,7 +65,7 @@ export function CreateGroupModal({ isOpen, onClose, onCreate }: CreateGroupModal
           >
             <div className="p-6 space-y-5">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-foreground">New Group</h2>
+                <h2 className="text-xl font-bold text-foreground">Nuevo Grupo</h2>
                 <motion.button
                   whileTap={{ scale: 0.9 }}
                   onClick={onClose}
@@ -77,16 +77,15 @@ export function CreateGroupModal({ isOpen, onClose, onCreate }: CreateGroupModal
 
               <div className="space-y-4">
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground mb-3 block">Pick an icon</label>
+                  <label className="text-sm font-medium text-muted-foreground mb-3 block">Elige un ícono</label>
                   <div className="flex gap-2 flex-wrap">
                     {groupEmojis.map((e) => (
                       <motion.button
                         key={e}
                         whileTap={{ scale: 0.9 }}
                         onClick={() => setEmoji(e)}
-                        className={`w-11 h-11 rounded-xl flex items-center justify-center text-xl transition-all ${
-                          emoji === e ? "bg-primary/20 ring-2 ring-primary" : "bg-muted/50 hover:bg-muted"
-                        }`}
+                        className={`w-11 h-11 rounded-xl flex items-center justify-center text-xl transition-all ${emoji === e ? "bg-primary/20 ring-2 ring-primary" : "bg-muted/50 hover:bg-muted"
+                          }`}
                       >
                         {e}
                       </motion.button>
@@ -95,9 +94,9 @@ export function CreateGroupModal({ isOpen, onClose, onCreate }: CreateGroupModal
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground mb-2 block">Group name</label>
+                  <label className="text-sm font-medium text-muted-foreground mb-2 block">Nombre del grupo</label>
                   <Input
-                    placeholder="e.g., Trip to Milan, Roommates..."
+                    placeholder="ej: Viaje a Milán, Compañeros de piso..."
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     className="h-12 rounded-xl border-border/50 bg-muted/30"
@@ -105,10 +104,10 @@ export function CreateGroupModal({ isOpen, onClose, onCreate }: CreateGroupModal
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground mb-2 block">Members</label>
+                  <label className="text-sm font-medium text-muted-foreground mb-2 block">Miembros</label>
                   <div className="flex gap-2 mb-3">
                     <Input
-                      placeholder="Add member..."
+                      placeholder="Agregar miembro..."
                       value={newMember}
                       onChange={(e) => setNewMember(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && handleAddMember()}
@@ -136,7 +135,7 @@ export function CreateGroupModal({ isOpen, onClose, onCreate }: CreateGroupModal
                           </AvatarFallback>
                         </Avatar>
                         <span className="text-sm font-medium text-foreground">{member}</span>
-                        {member !== "You" && (
+                        {member !== "Tú" && (
                           <motion.button
                             whileTap={{ scale: 0.9 }}
                             onClick={() => handleRemoveMember(member)}
@@ -156,7 +155,7 @@ export function CreateGroupModal({ isOpen, onClose, onCreate }: CreateGroupModal
                 disabled={!name.trim() || members.length === 0}
                 className="w-full h-12 font-semibold rounded-xl bg-foreground text-background hover:bg-foreground/90 disabled:opacity-50"
               >
-                Create Group
+                Crear Grupo
               </Button>
             </div>
           </motion.div>

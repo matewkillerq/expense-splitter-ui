@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect, useCallback } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Plus, ArrowDownUp, TrendingUp, TrendingDown, Users } from "lucide-react"
+import { Plus, ArrowDownUp, TrendingUp, TrendingDown, Users, RefreshCw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { AnimatedNumber } from "@/components/animated-number"
@@ -30,6 +30,7 @@ export default function ExpenseSplitter() {
   const [isCreateGroupOpen, setIsCreateGroupOpen] = useState(false)
   const [isProfileOpen, setIsProfileOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+  const [isRefreshing, setIsRefreshing] = useState(false)
 
   const router = useRouter()
 
@@ -65,6 +66,12 @@ export default function ExpenseSplitter() {
   useEffect(() => {
     loadData().then(() => setIsLoading(false))
   }, [loadData])
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true)
+    await loadData()
+    setIsRefreshing(false)
+  }
 
   const currentGroup = groups.find((g) => g.id === selectedGroupId)
 
@@ -296,22 +303,22 @@ export default function ExpenseSplitter() {
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 text-center">
         <div className="max-w-md w-full space-y-8">
           <div className="space-y-2">
-            <h1 className="text-3xl font-bold">Welcome, {currentUser?.displayName}!</h1>
-            <p className="text-muted-foreground">You don't have any groups yet.</p>
+            <h1 className="text-3xl font-bold">¡Bienvenido, {currentUser?.displayName}!</h1>
+            <p className="text-muted-foreground">Aún no tienes ningún grupo.</p>
           </div>
           <Button
             onClick={() => setIsCreateGroupOpen(true)}
             className="w-full h-14 text-lg rounded-2xl"
           >
             <Plus className="mr-2 h-5 w-5" />
-            Create your first group
+            Crear tu primer grupo
           </Button>
           <Button
             variant="ghost"
             onClick={handleLogout}
             className="text-muted-foreground hover:text-foreground"
           >
-            Sign out
+            Cerrar sesión
           </Button>
         </div>
         <CreateGroupModal
@@ -365,14 +372,25 @@ export default function ExpenseSplitter() {
               onCreateGroup={() => setIsCreateGroupOpen(true)}
             />
 
-            <motion.button whileTap={{ scale: 0.95 }} onClick={() => setIsProfileOpen(true)} className="relative">
-              <Avatar className="h-9 w-9 border-2 border-border/50">
-                <AvatarImage src={currentUser?.avatarUrl || undefined} />
-                <AvatarFallback className="text-xs bg-muted font-medium">
-                  {currentUser?.displayName.slice(0, 2).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-            </motion.button>
+            <div className="flex items-center gap-2">
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                onClick={handleRefresh}
+                disabled={isRefreshing}
+                className="p-2 rounded-xl bg-muted/50 hover:bg-muted transition-colors disabled:opacity-50"
+                aria-label="Actualizar"
+              >
+                <RefreshCw className={`h-4 w-4 text-muted-foreground ${isRefreshing ? 'animate-spin' : ''}`} />
+              </motion.button>
+              <motion.button whileTap={{ scale: 0.95 }} onClick={() => setIsProfileOpen(true)} className="relative">
+                <Avatar className="h-9 w-9 border-2 border-border/50">
+                  <AvatarImage src={currentUser?.avatarUrl || undefined} />
+                  <AvatarFallback className="text-xs bg-muted font-medium">
+                    {currentUser?.displayName.slice(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+              </motion.button>
+            </div>
           </div>
         </motion.header>
 
@@ -383,7 +401,7 @@ export default function ExpenseSplitter() {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.1 }}
         >
-          <p className="text-sm text-muted-foreground text-center mb-2">Your balance</p>
+          <p className="text-sm text-muted-foreground text-center mb-2">Tu balance</p>
           <AnimatedNumber value={userBalance} className="text-5xl font-bold tracking-tight" />
           <motion.div
             className="flex items-center justify-center gap-2 mt-3"
@@ -393,17 +411,17 @@ export default function ExpenseSplitter() {
           >
             {Math.abs(userBalance) < 0.01 ? (
               <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted text-muted-foreground">
-                <span className="text-xs font-medium">Settled up</span>
+                <span className="text-xs font-medium">Saldado</span>
               </div>
             ) : userBalance > 0 ? (
               <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">
                 <TrendingUp className="h-3.5 w-3.5" />
-                <span className="text-xs font-medium">You're owed</span>
+                <span className="text-xs font-medium">Te deben</span>
               </div>
             ) : (
               <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-destructive/20 text-destructive">
                 <TrendingDown className="h-3.5 w-3.5" />
-                <span className="text-xs font-medium">You owe</span>
+                <span className="text-xs font-medium">Debes</span>
               </div>
             )}
           </motion.div>
@@ -423,14 +441,14 @@ export default function ExpenseSplitter() {
               className="flex-1 h-14 rounded-2xl font-semibold border-border/50 hover:bg-muted/50 transition-all"
             >
               <ArrowDownUp className="h-5 w-5 mr-2" />
-              Settle
+              Saldar
             </Button>
             <Button
               onClick={() => setIsAddExpenseOpen(true)}
               className="flex-[2] h-14 rounded-2xl font-semibold bg-foreground text-background hover:bg-foreground/90 transition-all"
             >
               <Plus className="h-5 w-5 mr-2" />
-              Add Expense
+              Agregar Gasto
             </Button>
           </div>
         </motion.section>
@@ -438,9 +456,9 @@ export default function ExpenseSplitter() {
         {/* Expenses List */}
         <section className="px-4">
           <div className="flex items-center justify-between px-2 mb-4">
-            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Expenses</h2>
+            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Gastos</h2>
             <span className="text-xs text-muted-foreground">
-              {currentGroup.expenses.length} expense{currentGroup.expenses.length !== 1 ? "s" : ""}
+              {currentGroup.expenses.length} gasto{currentGroup.expenses.length !== 1 ? "s" : ""}
             </span>
           </div>
 
@@ -469,8 +487,8 @@ export default function ExpenseSplitter() {
                 animate={{ opacity: 1 }}
                 className="text-center py-12 text-muted-foreground"
               >
-                <p className="text-lg font-medium">No expenses yet</p>
-                <p className="text-sm mt-1">Add your first expense to get started</p>
+                <p className="text-lg font-medium">Aún no hay gastos</p>
+                <p className="text-sm mt-1">Agrega tu primer gasto para comenzar</p>
               </motion.div>
             )}
           </div>

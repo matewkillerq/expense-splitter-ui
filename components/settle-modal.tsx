@@ -48,7 +48,7 @@ export function SettleModal({ isOpen, onClose, settlements, simplifiedSettlement
           >
             <div className="p-6 space-y-5">
               <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold text-foreground">Settle Up</h2>
+                <h2 className="text-2xl font-bold text-foreground">Saldar Cuentas</h2>
                 <motion.button
                   whileTap={{ scale: 0.9 }}
                   onClick={onClose}
@@ -71,11 +71,11 @@ export function SettleModal({ isOpen, onClose, settlements, simplifiedSettlement
                         <Sparkles className={`h-5 w-5 ${useSimplified ? "text-accent" : "text-muted-foreground"}`} />
                       </div>
                       <div className="text-left">
-                        <p className="font-semibold text-foreground">Simplify transactions</p>
+                        <p className="font-semibold text-foreground">Simplificar transacciones</p>
                         <p className="text-sm text-muted-foreground">
                           {savedTransactions > 0
-                            ? `Save ${savedTransactions} transaction${savedTransactions > 1 ? "s" : ""}`
-                            : "Optimized for minimum transfers"}
+                            ? `Ahorra ${savedTransactions} transacción${savedTransactions > 1 ? "es" : ""}`
+                            : "Optimizado para mínimas transferencias"}
                         </p>
                       </div>
                     </div>
@@ -91,7 +91,7 @@ export function SettleModal({ isOpen, onClose, settlements, simplifiedSettlement
                     onClick={() => setShowExplanation(!showExplanation)}
                     className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors mx-auto"
                   >
-                    <span>How it works</span>
+                    <span>Cómo funciona</span>
                     {showExplanation ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                   </motion.button>
 
@@ -105,9 +105,9 @@ export function SettleModal({ isOpen, onClose, settlements, simplifiedSettlement
                       >
                         <div className="p-4 rounded-xl bg-muted/30 text-sm text-muted-foreground">
                           <p>
-                            Instead of everyone paying each other back individually, we calculate the net balance and
-                            find the minimum number of transfers needed. For example, if A owes B $10 and B owes C $10,
-                            A can pay C directly instead of two separate transfers.
+                            En lugar de que todos se paguen entre sí individualmente, calculamos el balance neto y
+                            encontramos el número mínimo de transferencias necesarias. Por ejemplo, si A le debe a B $10 y B le debe a C $10,
+                            A puede pagar directamente a C en lugar de dos transferencias separadas.
                           </p>
                         </div>
                       </motion.div>
@@ -125,8 +125,8 @@ export function SettleModal({ isOpen, onClose, settlements, simplifiedSettlement
                   <div className="p-4 rounded-full bg-accent/20">
                     <Check className="h-8 w-8 text-accent" />
                   </div>
-                  <p className="text-lg font-medium text-foreground">All settled up!</p>
-                  <p className="text-sm text-muted-foreground text-center">No outstanding balances in your group</p>
+                  <p className="text-lg font-medium text-foreground">¡Todo saldado!</p>
+                  <p className="text-sm text-muted-foreground text-center">No hay balances pendientes en tu grupo</p>
                 </motion.div>
               ) : (
                 <div className="space-y-3">
@@ -168,7 +168,7 @@ export function SettleModal({ isOpen, onClose, settlements, simplifiedSettlement
                           size="sm"
                           className="rounded-xl bg-accent hover:bg-accent/90 text-accent-foreground"
                         >
-                          Settle
+                          Saldar
                         </Button>
                       </motion.div>
                     ))}
@@ -178,7 +178,7 @@ export function SettleModal({ isOpen, onClose, settlements, simplifiedSettlement
 
               {activeSettlements.length > 0 && (
                 <p className="text-center text-sm text-muted-foreground">
-                  {activeSettlements.length} transfer{activeSettlements.length > 1 ? "s" : ""} needed
+                  {activeSettlements.length} transferencia{activeSettlements.length > 1 ? "s" : ""} necesaria{activeSettlements.length > 1 ? "s" : ""}
                 </p>
               )}
             </div>

@@ -57,7 +57,7 @@ export const groupService = {
                         .select('user_id, profiles(username)')
                         .eq('group_id', group.id)
 
-                    const activeMembers = memberData?.map((m: any) => m.profiles.username) || []
+                    const activeMembers = memberData?.map((m: any) => m.profiles?.username).filter(Boolean) || []
 
                     // Obtener invitaciones pendientes
                     const { data: pendingData } = await supabase

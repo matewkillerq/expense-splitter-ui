@@ -77,7 +77,7 @@ export function AddExpenseModal({ isOpen, onClose, onAdd, members, currentUserId
           >
             <div className="p-6 space-y-6">
               <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold text-foreground">Add Expense</h2>
+                <h2 className="text-2xl font-bold text-foreground">Agregar Gasto</h2>
                 <motion.button
                   whileTap={{ scale: 0.9 }}
                   onClick={onClose}
@@ -89,9 +89,9 @@ export function AddExpenseModal({ isOpen, onClose, onAdd, members, currentUserId
 
               <div className="space-y-5">
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground mb-2 block">Description</label>
+                  <label className="text-sm font-medium text-muted-foreground mb-2 block">Descripción</label>
                   <Input
-                    placeholder="What's this expense for?"
+                    placeholder="¿Para qué es este gasto?"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     className="h-14 text-lg rounded-xl border-border/50 bg-muted/30"
@@ -99,7 +99,7 @@ export function AddExpenseModal({ isOpen, onClose, onAdd, members, currentUserId
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground mb-2 block">Amount</label>
+                  <label className="text-sm font-medium text-muted-foreground mb-2 block">Monto</label>
                   <div className="relative">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-2xl font-bold text-muted-foreground">
                       $
@@ -116,7 +116,7 @@ export function AddExpenseModal({ isOpen, onClose, onAdd, members, currentUserId
 
                 <div>
                   <label className="text-sm font-medium text-muted-foreground mb-3 block">
-                    Paid by <span className="text-xs opacity-70">(select one or more)</span>
+                    Pagado por <span className="text-xs opacity-70">(selecciona uno o más)</span>
                   </label>
                   <div className="flex flex-wrap gap-2">
                     {members.map((member) => (
@@ -142,7 +142,7 @@ export function AddExpenseModal({ isOpen, onClose, onAdd, members, currentUserId
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground mb-3 block">Split between</label>
+                  <label className="text-sm font-medium text-muted-foreground mb-3 block">Dividir entre</label>
                   <div className="flex flex-wrap gap-2">
                     {members.map((member) => (
                       <motion.button
@@ -167,7 +167,7 @@ export function AddExpenseModal({ isOpen, onClose, onAdd, members, currentUserId
                 disabled={!title || !amount || selectedParticipants.length === 0 || paidBy.length === 0}
                 className="w-full h-14 text-lg font-semibold rounded-xl bg-foreground text-background hover:bg-foreground/90 transition-all disabled:opacity-50"
               >
-                Add Expense
+                Agregar Gasto
               </Button>
             </div>
           </motion.div>

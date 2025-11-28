@@ -18,8 +18,14 @@ export function ExpenseCard({ title, amount, paidBy, participants, date, index, 
     paidBy.length === 1
       ? paidBy[0]
       : paidBy.length === 2
-        ? `${paidBy[0]} & ${paidBy[1]}`
+        ? `${paidBy[0]} y ${paidBy[1]}`
         : `${paidBy[0]} +${paidBy.length - 1}`
+
+  // Determinar el texto del monto por participante
+  const amountPerParticipant = amount / participants.length
+  const amountText = participants.length === 1
+    ? `$${amount.toFixed(2)} solo para ti`
+    : `$${amountPerParticipant.toFixed(2)} cada uno`
 
   return (
     <motion.div
@@ -36,7 +42,7 @@ export function ExpenseCard({ title, amount, paidBy, participants, date, index, 
         <div className="flex flex-col gap-0.5">
           <h3 className="font-semibold text-foreground text-base leading-tight">{title}</h3>
           <p className="text-sm text-muted-foreground">
-            Paid by <span className="font-medium text-foreground">{paidByText}</span>
+            Pagado por <span className="font-medium text-foreground">{paidByText}</span>
           </p>
         </div>
         <div className="text-right shrink-0">
@@ -63,7 +69,7 @@ export function ExpenseCard({ title, amount, paidBy, participants, date, index, 
           )}
         </div>
         <span className="text-xs text-muted-foreground bg-muted/50 px-2.5 py-1 rounded-full">
-          ${(amount / participants.length).toFixed(2)} each
+          {amountText}
         </span>
       </div>
 
@@ -71,9 +77,12 @@ export function ExpenseCard({ title, amount, paidBy, participants, date, index, 
         <button
           onClick={(e) => {
             e.stopPropagation()
-            onDelete()
+            if (confirm('¿Estás seguro de que quieres eliminar este gasto?')) {
+              onDelete()
+            }
           }}
-          className="absolute -top-2 -right-2 p-2 rounded-full bg-destructive text-destructive-foreground opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
+          className="absolute -top-2 -right-2 p-2 rounded-full bg-destructive text-destructive-foreground shadow-lg opacity-90 hover:opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
+          aria-label="Eliminar gasto"
         >
           <Trash2 className="h-4 w-4" />
         </button>
