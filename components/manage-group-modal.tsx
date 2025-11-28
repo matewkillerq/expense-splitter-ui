@@ -13,6 +13,7 @@ interface ManageGroupModalProps {
   members: { id: string; name: string; avatarUrl?: string | null }[]
   groupName: string
   groupEmoji: string
+  totalExpenses: number
   onAddMember: (name: string) => void
   onRemoveMember: (id: string) => void
   onUpdateGroup: (name: string, emoji: string) => void
@@ -27,6 +28,7 @@ export function ManageGroupModal({
   members,
   groupName,
   groupEmoji,
+  totalExpenses,
   onAddMember,
   onRemoveMember,
   onUpdateGroup,
@@ -137,7 +139,7 @@ export function ManageGroupModal({
                     <span className="text-3xl">{groupEmoji}</span>
                     <div>
                       <p className="font-semibold text-foreground">{groupName}</p>
-                      <p className="text-sm text-muted-foreground">Tap to edit</p>
+                      <p className="text-sm text-muted-foreground">Total gastado: ${totalExpenses.toFixed(2)}</p>
                     </div>
                   </motion.button>
                 )}

@@ -388,9 +388,8 @@ export default function ExpenseSplitter() {
           )}
         </div>
       </section>
-    </div>
 
-      {/* Modals */ }
+      {/* Modals */}
       <AddExpenseModal
         isOpen={isAddExpenseOpen}
         onClose={() => setIsAddExpenseOpen(false)}
@@ -404,6 +403,7 @@ export default function ExpenseSplitter() {
         members={formattedMembers}
         groupName={currentGroup.name}
         groupEmoji={currentGroup.emoji}
+        totalExpenses={currentGroup.expenses.reduce((sum, expense) => sum + expense.amount, 0)}
         onAddMember={handleAddMember}
         onRemoveMember={handleRemoveMember}
         onUpdateGroup={handleUpdateGroup}
