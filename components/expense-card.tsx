@@ -13,9 +13,10 @@ interface ExpenseCardProps {
   date: string
   index: number
   onDelete?: () => void
+  currentUserId?: string
 }
 
-export function ExpenseCard({ title, amount, paidBy, participants, date, index, onDelete }: ExpenseCardProps) {
+export function ExpenseCard({ title, amount, paidBy, participants, date, index, onDelete, currentUserId }: ExpenseCardProps) {
   const [isOpen, setIsOpen] = useState(false)
   const x = useMotionValue(0)
 
@@ -32,7 +33,9 @@ export function ExpenseCard({ title, amount, paidBy, participants, date, index, 
 
   const amountPerParticipant = amount / participants.length
   const amountText = participants.length === 1
-    ? `$${amount.toFixed(2)} solo para ti`
+    ? (participants[0].username === currentUserId
+      ? `$${amount.toFixed(2)} solo para ti`
+      : `$${amount.toFixed(2)} solo para ${participants[0].username}`)
     : `$${amountPerParticipant.toFixed(2)} cada uno`
 
   const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {

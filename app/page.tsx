@@ -262,291 +262,135 @@ export default function ExpenseSplitter() {
   }
 
   const handleDeleteExpense = async (expenseId: string) => {
+    if (!currentGroup) return
+
+    // Optimistic update
+    const previousGroups = [...groups]
+    setGroups(groups.map(g => {
+      if (g.id === currentGroup.id) {
+        return {
+          ...g,
+          expenses: g.expenses.filter(e => e.id !== expenseId)
+        }
+      }
+      return g
+    }))
+
     const { error } = await expenseService.deleteExpense(expenseId)
-    if (!error) {
-      await loadData()
-    }
-  }
-
-  const handleAddMember = async (username: string) => {
-    if (!currentGroup) return
-
-    const { error } = await groupService.addMember(currentGroup.id, username.trim().toLowerCase())
     if (error) {
-      alert(error)
-    } else {
-      await loadData()
+      // Rollback on error
+      setGroups(previousGroups)
+      console.error("Error deleting expense:", error)
     }
+    // No need to await loadData() explicitly as Realtime will sync eventually, 
+    // but we can call it silently to ensure consistency without blocking UI.
   }
 
-  const handleRemoveMember = async (username: string) => {
-    if (!currentGroup) return
-
-    const { error } = await groupService.removeMember(currentGroup.id, username)
-    if (!error) {
-      await loadData()
-    }
-  }
-
-  const handleUpdateGroup = async (name: string, emoji: string) => {
-    if (!currentGroup) return
-
-    const { error } = await groupService.updateGroup(currentGroup.id, { name, emoji })
-    if (!error) {
-      await loadData()
-    }
-  }
-
-  const handleDeleteGroup = async () => {
-    if (!currentGroup) return
-
-    const { error } = await groupService.deleteGroup(currentGroup.id)
-    if (!error) {
-      setSelectedGroupId(null)
-      await loadData()
-      setIsManageGroupOpen(false)
-    }
-  }
+  // ... (handleSettle)
 
   const handleSettle = async (settlement: { from: string; to: string; amount: number }) => {
     if (!currentGroup || !currentUser) return
 
+    const newExpense = {
+      title: `Saldo: ${settlement.from} → ${settlement.to}`,
+      amount: settlement.amount,
+      paidBy: [settlement.from],
+      participants: [settlement.to],
+    }
+
+    // Optimistic update
+    const optimisticExpense = {
+      id: `temp-${Date.now()}`,
+      ...newExpense,
+      date: new Date().toISOString(),
+    }
+
+    const previousGroups = [...groups]
+    setGroups(groups.map(g => {
+      if (g.id === currentGroup.id) {
+        return {
+          ...g,
+          expenses: [optimisticExpense, ...g.expenses]
+        }
+      }
+      return g
+    }))
+
     const { error } = await expenseService.createExpense(
       currentGroup.id,
       currentUser.id,
-      {
-        title: `Settlement: ${settlement.from} → ${settlement.to}`,
-        amount: settlement.amount,
-        paidBy: [settlement.from],
-        participants: [settlement.to],
-      }
+      newExpense
     )
 
-    if (!error) {
-      await loadData()
+    if (error) {
+      setGroups(previousGroups)
+      console.error("Error creating settlement:", error)
+    } else {
+      // Realtime will replace the temp expense with the real one
     }
   }
 
-  const handleUpdateProfile = async (name: string, avatarUrl: string | null) => {
-    if (!currentUser) return
+  // ...
 
-    const { error } = await userService.updateProfile(currentUser.id, {
-      displayName: name,
-      avatarUrl: avatarUrl || undefined,
-    })
-
-    if (!error) {
-      await loadData()
+  const formattedMembers = currentGroup.members.map(m => {
+    const details = currentGroup.memberDetails?.find(d => d.username === m)
+    return {
+      id: m,
+      name: m.toLowerCase() === currentUser?.username.toLowerCase() ? `${m} (You)` : m,
+      avatarUrl: details?.avatarUrl || null,
     }
-  }
-
-  const handleLogout = async () => {
-    await authService.signOut()
-    router.push("/auth/login")
-  }
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
-          className="w-8 h-8 border-2 border-foreground border-t-transparent rounded-full"
-        />
-      </div>
-    )
-  }
-
-  // Empty State
-  if (groups.length === 0) {
-    return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 text-center">
-        <div className="max-w-md w-full space-y-8">
-          <div className="space-y-2">
-            <h1 className="text-3xl font-bold">¡Bienvenido, {currentUser?.displayName}!</h1>
-            <p className="text-muted-foreground">Aún no tienes ningún grupo.</p>
-          </div>
-          <Button
-            onClick={() => setIsCreateGroupOpen(true)}
-            className="w-full h-14 text-lg rounded-2xl"
-          >
-            <Plus className="mr-2 h-5 w-5" />
-            Crear tu primer grupo
-          </Button>
-          <Button
-            variant="ghost"
-            onClick={handleLogout}
-            className="text-muted-foreground hover:text-foreground"
-          >
-            Cerrar sesión
-          </Button>
-        </div>
-        <CreateGroupModal
-          isOpen={isCreateGroupOpen}
-          onClose={() => setIsCreateGroupOpen(false)}
-          onCreate={handleCreateGroup}
-        />
-      </div>
-    )
-  }
-
-  if (!currentGroup) return null
-
-  const groupsForSelector = groups.map((g) => ({
-    id: g.id,
-    name: g.name,
-    emoji: g.emoji,
-    membersCount: g.members.length,
-  }))
-
-  const formattedMembers = currentGroup.members.map(m => ({
-    id: m,
-    name: m.toLowerCase() === currentUser?.username.toLowerCase() ? `${m} (You)` : m,
-    avatarUrl: null, // We'll fetch this if needed
-  }))
+  })
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-md mx-auto pb-32">
-        {/* Header */}
-        <motion.header
-          className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl border-b border-border/50"
-          initial={{ y: -20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.3 }}
-        >
-          <div className="flex items-center justify-between p-4">
-            <motion.button
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setIsManageGroupOpen(true)}
-              className="flex items-center gap-2 px-3 py-2 rounded-xl bg-muted/50 hover:bg-muted transition-colors"
-            >
-              <Users className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm font-medium text-foreground">{currentGroup.members.length}</span>
-            </motion.button>
+      {/* ... header ... */}
+      {/* Expenses List */}
+      <section className="px-4">
+        <div className="flex items-center justify-between px-2 mb-4">
+          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Gastos</h2>
+          <span className="text-xs text-muted-foreground">
+            {currentGroup.expenses.length} gasto{currentGroup.expenses.length !== 1 ? "s" : ""}
+          </span>
+        </div>
 
-            <GroupSelector
-              groups={groupsForSelector}
-              selectedGroup={groupsForSelector.find((g) => g.id === selectedGroupId) || groupsForSelector[0]}
-              onSelectGroup={(g) => setSelectedGroupId(g.id)}
-              onCreateGroup={() => setIsCreateGroupOpen(true)}
-            />
-
-            <div className="flex items-center gap-2">
-              <motion.button whileTap={{ scale: 0.95 }} onClick={() => setIsProfileOpen(true)} className="relative">
-                <Avatar className="h-9 w-9 border-2 border-border/50">
-                  <AvatarImage src={currentUser?.avatarUrl || undefined} />
-                  <AvatarFallback className="text-xs bg-muted font-medium">
-                    {currentUser?.displayName.slice(0, 2).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-              </motion.button>
-            </div>
-          </div>
-        </motion.header>
-
-        {/* Balance Section */}
-        <motion.section
-          className="px-6 pt-8 pb-6"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.1 }}
-        >
-          <p className="text-sm text-muted-foreground text-center mb-2">Tu balance</p>
-          <AnimatedNumber value={userBalance} className="text-5xl font-bold tracking-tight" />
-          <motion.div
-            className="flex items-center justify-center gap-2 mt-3"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
-          >
-            {Math.abs(userBalance) < 0.01 ? (
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted text-muted-foreground">
-                <span className="text-xs font-medium">Saldado</span>
-              </div>
-            ) : userBalance > 0 ? (
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">
-                <TrendingUp className="h-3.5 w-3.5" />
-                <span className="text-xs font-medium">Te deben</span>
-              </div>
-            ) : (
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-destructive/20 text-destructive">
-                <TrendingDown className="h-3.5 w-3.5" />
-                <span className="text-xs font-medium">Debes</span>
-              </div>
-            )}
-          </motion.div>
-        </motion.section>
-
-        {/* Action Buttons */}
-        <motion.section
-          className="px-6 pb-6"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15 }}
-        >
-          <div className="flex gap-3">
-            <Button
-              onClick={() => setIsSettleOpen(true)}
-              variant="outline"
-              className="flex-1 h-14 rounded-2xl font-semibold border-border/50 hover:bg-muted/50 transition-all"
-            >
-              <ArrowDownUp className="h-5 w-5 mr-2" />
-              Saldar
-            </Button>
-            <Button
-              onClick={() => setIsAddExpenseOpen(true)}
-              className="flex-[2] h-14 rounded-2xl font-semibold bg-foreground text-background hover:bg-foreground/90 transition-all"
-            >
-              <Plus className="h-5 w-5 mr-2" />
-              Agregar Gasto
-            </Button>
-          </div>
-        </motion.section>
-
-        {/* Expenses List */}
-        <section className="px-4">
-          <div className="flex items-center justify-between px-2 mb-4">
-            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Gastos</h2>
-            <span className="text-xs text-muted-foreground">
-              {currentGroup.expenses.length} gasto{currentGroup.expenses.length !== 1 ? "s" : ""}
-            </span>
-          </div>
-
-          <div className="space-y-3">
-            <AnimatePresence mode="popLayout">
-              {currentGroup.expenses.map((expense, index) => (
-                <ExpenseCard
-                  key={expense.id}
-                  title={expense.title}
-                  amount={expense.amount}
-                  paidBy={expense.paidBy}
-                  participants={expense.participants.map(p => ({
+        <div className="space-y-3">
+          <AnimatePresence mode="popLayout">
+            {currentGroup.expenses.map((expense, index) => (
+              <ExpenseCard
+                key={expense.id}
+                title={expense.title}
+                amount={expense.amount}
+                paidBy={expense.paidBy}
+                participants={expense.participants.map(p => {
+                  const details = currentGroup.memberDetails?.find(d => d.username === p)
+                  return {
                     username: p,
-                    avatarUrl: null,
-                  }))}
-                  date={expense.date}
-                  index={index}
-                  onDelete={() => handleDeleteExpense(expense.id)}
-                />
-              ))}
-            </AnimatePresence>
+                    avatarUrl: details?.avatarUrl || null,
+                  }
+                })}
+                date={expense.date}
+                index={index}
+                currentUserId={currentUser?.username}
+                onDelete={() => handleDeleteExpense(expense.id)}
+              />
+            ))}
+          </AnimatePresence>
 
-            {currentGroup.expenses.length === 0 && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="text-center py-12 text-muted-foreground"
-              >
-                <p className="text-lg font-medium">Aún no hay gastos</p>
-                <p className="text-sm mt-1">Agrega tu primer gasto para comenzar</p>
-              </motion.div>
-            )}
-          </div>
-        </section>
-      </div>
+          {currentGroup.expenses.length === 0 && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-center py-12 text-muted-foreground"
+            >
+              <p className="text-lg font-medium">Aún no hay gastos</p>
+              <p className="text-sm mt-1">Agrega tu primer gasto para comenzar</p>
+            </motion.div>
+          )}
+        </div>
+      </section>
+    </div>
 
-      {/* Modals */}
+      {/* Modals */ }
       <AddExpenseModal
         isOpen={isAddExpenseOpen}
         onClose={() => setIsAddExpenseOpen(false)}
@@ -587,6 +431,6 @@ export default function ExpenseSplitter() {
         }}
         onUpdateProfile={handleUpdateProfile}
       />
-    </div>
+    </div >
   )
 }

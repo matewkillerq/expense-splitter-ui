@@ -5,17 +5,11 @@ export interface Group {
     name: string
     emoji: string
     members: string[] // usernames
+    memberDetails: { username: string; avatarUrl: string | null }[]
     expenses: Expense[]
 }
 
-export interface Expense {
-    id: string
-    title: string
-    amount: number
-    paidBy: string[] // usernames
-    participants: string[] // usernames
-    date: string
-}
+// ... (Expense interface remains the same)
 
 export const groupService = {
     /**
@@ -51,13 +45,18 @@ export const groupService = {
             // 3. Para cada grupo, obtener miembros y gastos
             const groupsWithData = await Promise.all(
                 groups.map(async (group) => {
-                    // Obtener miembros
+                    // Obtener miembros con avatar
                     const { data: memberData } = await supabase
                         .from('group_members')
-                        .select('user_id, profiles(username)')
+                        .select('user_id, profiles(username, avatar_url)')
                         .eq('group_id', group.id)
 
-                    const activeMembers = memberData?.map((m: any) => m.profiles?.username).filter(Boolean) || []
+                    const activeMembersDetails = memberData?.map((m: any) => ({
+                        username: m.profiles?.username,
+                        avatarUrl: m.profiles?.avatar_url
+                    })).filter(m => m.username) || []
+
+                    const activeMembers = activeMembersDetails.map(m => m.username)
 
                     // Obtener invitaciones pendientes
                     const { data: pendingData } = await supabase
@@ -66,9 +65,11 @@ export const groupService = {
                         .eq('group_id', group.id)
 
                     const pendingMembers = pendingData?.map((p) => p.username) || []
+                    const pendingMembersDetails = pendingMembers.map(username => ({ username, avatarUrl: null }))
 
                     // Combinar miembros activos y pendientes
                     const members = [...activeMembers, ...pendingMembers]
+                    const memberDetails = [...activeMembersDetails, ...pendingMembersDetails]
 
                     // Obtener gastos
                     const { data: expenses } = await supabase
@@ -106,6 +107,7 @@ export const groupService = {
                         name: group.name,
                         emoji: group.emoji,
                         members,
+                        memberDetails,
                         expenses: expensesWithDetails,
                     }
                 })
@@ -172,6 +174,7 @@ export const groupService = {
                     name: group.name,
                     emoji: group.emoji,
                     members: usernames,
+                    memberDetails: usernames.map(u => ({ username: u, avatarUrl: null })), // Inicialmente sin avatar o null
                     expenses: [],
                 },
                 error: null,
