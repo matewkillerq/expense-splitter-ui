@@ -227,7 +227,7 @@ export default function ExpenseSplitter() {
 
     const members = Array.from(new Set([
       ...groupData.members
-        .filter(m => m.toLowerCase() !== "you")
+        .filter(m => m.toLowerCase() !== "you" && m.toLowerCase() !== "tú")
         .map(m => m.toLowerCase()),
       currentUser.username.toLowerCase()
     ]))
