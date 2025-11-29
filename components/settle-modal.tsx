@@ -133,6 +133,38 @@ export function SettleModal({ isOpen, onClose, settlements, simplifiedSettlement
                 </motion.div>
               ) : (
                 <div className="space-y-3">
+                  {/* Bank Quick Access Card */}
+                  {preferredBank && BANKS[preferredBank] && (
+                    <motion.a
+                      href={BANKS[preferredBank].appLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      whileTap={{ scale: 0.98 }}
+                      className="flex items-center justify-between p-4 rounded-2xl bg-primary/10 hover:bg-primary/15 transition-colors border border-primary/20"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-xl bg-primary/20">
+                          <div className="relative w-6 h-6">
+                            <Image
+                              src={BANKS[preferredBank].icon}
+                              alt={BANKS[preferredBank].name}
+                              fill
+                              className="object-contain"
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <p className="font-semibold text-foreground">Abrir {BANKS[preferredBank].name}</p>
+                          <p className="text-xs text-muted-foreground">Acceso rápido para realizar pagos</p>
+                        </div>
+                      </div>
+                      <ArrowRight className="h-5 w-5 text-primary" />
+                    </motion.a>
+                  )}
+
+                  {/* Settlement Items */}
                   <AnimatePresence mode="popLayout">
                     {activeSettlements.map((settlement, index) => (
                       <motion.div
@@ -166,34 +198,13 @@ export function SettleModal({ isOpen, onClose, settlements, simplifiedSettlement
                             </p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            onClick={() => onSettle(settlement)}
-                            size="sm"
-                            className="rounded-xl bg-accent hover:bg-accent/90 text-accent-foreground"
-                          >
-                            Saldar
-                          </Button>
-                          {preferredBank && BANKS[preferredBank] && (
-                            <motion.a
-                              href={BANKS[preferredBank].appLink}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              whileTap={{ scale: 0.95 }}
-                              className="p-2 rounded-xl bg-primary/10 hover:bg-primary/20 transition-colors"
-                              title={`Abrir ${BANKS[preferredBank].name}`}
-                            >
-                              <div className="relative w-4 h-4">
-                                <Image
-                                  src={BANKS[preferredBank].icon}
-                                  alt={BANKS[preferredBank].name}
-                                  fill
-                                  className="object-contain"
-                                />
-                              </div>
-                            </motion.a>
-                          )}
-                        </div>
+                        <Button
+                          onClick={() => onSettle(settlement)}
+                          size="sm"
+                          className="rounded-xl bg-accent hover:bg-accent/90 text-accent-foreground"
+                        >
+                          Saldar
+                        </Button>
                       </motion.div>
                     ))}
                   </AnimatePresence>
