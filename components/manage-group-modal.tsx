@@ -199,35 +199,57 @@ export function ManageGroupModal({
                       setTempGroupBank(groupBank || null)
                       setEditingGroup(true)
                     }}
-                    className="w-full flex items-center gap-3 text-left"
+                    className="w-full bg-muted/30 p-4 rounded-2xl border border-border/50 hover:bg-muted/50 transition-colors text-left"
                     whileTap={{ scale: 0.98 }}
                   >
-                    <span className="text-3xl">{groupEmoji}</span>
-                    <div>
-                      <p className="font-semibold text-foreground">{groupName}</p>
-                      <p className="text-sm text-muted-foreground flex items-center gap-1">
-                        Total gastado:
-                        <FormattedAmount
-                          amount={totalExpenses}
-                          currency={groupCurrency}
-                          className="font-medium text-foreground"
-                          symbolClassName="text-xs mr-0.5"
-                          centsClassName="text-[10px] align-super ml-0.5"
-                        />
-                      </p>
-                      {groupBank && BANKS[groupBank] && (
-                        <div className="flex items-center gap-1.5 mt-1 text-xs text-muted-foreground">
-                          <div className="relative w-4 h-4">
-                            <Image
-                              src={BANKS[groupBank].icon}
-                              alt={BANKS[groupBank].name}
-                              fill
-                              className="object-contain"
-                            />
-                          </div>
-                          <span>{BANKS[groupBank].name}</span>
+                    <div className="flex items-start gap-4">
+                      <div className="w-12 h-12 rounded-xl bg-background flex items-center justify-center text-3xl shadow-sm">
+                        {groupEmoji}
+                      </div>
+                      <div className="flex-1 space-y-1">
+                        <div className="flex items-center justify-between">
+                          <h3 className="font-semibold text-lg text-foreground">{groupName}</h3>
+                          <span className="text-xs font-medium text-primary bg-primary/10 px-2 py-1 rounded-full">
+                            Editar
+                          </span>
                         </div>
-                      )}
+
+                        <div className="grid grid-cols-2 gap-2 mt-2">
+                          <div className="bg-background/50 p-2 rounded-lg">
+                            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Moneda</p>
+                            <p className="text-sm font-medium">{groupCurrency}</p>
+                          </div>
+                          <div className="bg-background/50 p-2 rounded-lg">
+                            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Banco</p>
+                            {groupBank && BANKS[groupBank] ? (
+                              <div className="flex items-center gap-1.5">
+                                <div className="relative w-4 h-4">
+                                  <Image
+                                    src={BANKS[groupBank].icon}
+                                    alt={BANKS[groupBank].name}
+                                    fill
+                                    className="object-contain"
+                                  />
+                                </div>
+                                <span className="text-sm font-medium truncate">{BANKS[groupBank].name}</span>
+                              </div>
+                            ) : (
+                              <p className="text-sm text-muted-foreground italic">No seleccionado</p>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="pt-2 mt-2 border-t border-border/50 flex justify-between items-center">
+                          <span className="text-xs text-muted-foreground">Total gastado</span>
+                          <FormattedAmount
+                            amount={totalExpenses}
+                            currency={groupCurrency}
+                            className="font-semibold text-foreground"
+                            symbolClassName="text-xs mr-0.5"
+                            centsClassName="text-[10px] align-super ml-0.5"
+                          />
+                        </div>
+                      </div>
                     </div>
                   </motion.button>
                 )}

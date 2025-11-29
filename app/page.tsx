@@ -260,18 +260,11 @@ export default function ExpenseSplitter() {
     const tempExpense = {
       id: tempExpenseId,
       group_id: currentGroup.id,
-      description: expenseData.title,
+      title: expenseData.title,
       amount: expenseData.amount,
-      created_by: currentUser.id,
-      created_at: new Date().toISOString(),
-      paid_by: expenseData.paidBy.map(userId => ({
-        user_id: userId,
-        amount: expenseData.amount / expenseData.paidBy.length // Simplified for display
-      })),
-      participants: expenseData.participants.map(userId => ({
-        user_id: userId,
-        amount: expenseData.amount / expenseData.participants.length // Simplified for display
-      }))
+      paidBy: expenseData.paidBy,
+      participants: expenseData.participants,
+      date: new Date().toISOString()
     }
 
     // Update local state immediately
