@@ -21,7 +21,7 @@ import { expenseService } from "@/lib/services/expense.service"
 import { userService } from "@/lib/services/user.service"
 import { createClient } from "@/lib/supabase/client"
 import { type CurrencyCode } from "@/lib/utils/currency"
-import { type BankCode } from "@/lib/utils/bank"
+import { type BankCode, getBankAppLink } from "@/lib/utils/bank"
 
 export default function ExpenseSplitter() {
   const [groups, setGroups] = useState<Group[]>([])
@@ -532,7 +532,14 @@ export default function ExpenseSplitter() {
           transition={{ delay: 0.15 }}
         >
           <Button
-            onClick={() => setIsSettleOpen(true)}
+            onClick={() => {
+              const bankLink = currentGroup.preferred_bank ? getBankAppLink(currentGroup.preferred_bank) : null
+              if (bankLink) {
+                window.open(bankLink, '_blank')
+              } else {
+                setIsSettleOpen(true)
+              }
+            }}
             variant="ghost"
             className="h-10 px-6 rounded-full text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all"
           >
@@ -544,14 +551,14 @@ export default function ExpenseSplitter() {
         {/* Floating Add Button */}
         <motion.button
           onClick={() => setIsAddExpenseOpen(true)}
-          className="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-foreground text-background shadow-lg hover:shadow-xl transition-all z-50 flex items-center justify-center"
+          className="fixed bottom-6 right-6 w-16 h-16 rounded-full bg-foreground text-background shadow-lg hover:shadow-xl transition-shadow z-50 flex items-center justify-center"
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          initial={{ opacity: 0, scale: 0 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.3, type: "spring" }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2 }}
         >
-          <Plus className="h-6 w-6" />
+          <Plus className="h-7 w-7" />
         </motion.button>
 
         {/* Expenses List */}

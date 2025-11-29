@@ -12,31 +12,31 @@ export const BANKS: Record<BankCode, Bank> = {
         code: 'REVOLUT',
         name: 'Revolut',
         appLink: 'https://www.revolut.com//app',
-        icon: '/icon apps/Revolut.webp'
+        icon: '/banks/Revolut.webp'
     },
     SANTANDER: {
         code: 'SANTANDER',
         name: 'Santander',
         appLink: 'https://www.bancosantander.es//app',
-        icon: '/icon apps/Santander.webp'
+        icon: '/banks/Santander.webp'
     },
     BBVA: {
         code: 'BBVA',
         name: 'BBVA',
         appLink: 'https://www.bbva.es//app',
-        icon: '/icon apps/BBVA.webp'
+        icon: '/banks/BBVA.webp'
     },
     CAIXABANK: {
         code: 'CAIXABANK',
         name: 'CaixaBank',
         appLink: 'https://www.caixabank.es//app',
-        icon: '/icon apps/Caixa.webp'
+        icon: '/banks/Caixa.webp'
     },
     MERCADOPAGO: {
         code: 'MERCADOPAGO',
         name: 'Mercado Pago',
         appLink: 'https://www.mercadopago.com//app',
-        icon: '/icon apps/MercadoPago.webp'
+        icon: '/banks/MercadoPago.webp'
     }
 }
 

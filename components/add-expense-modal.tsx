@@ -42,10 +42,10 @@ export function AddExpenseModal({ isOpen, onClose, onAdd, members, currentUserId
   }
 
   const handleSubmit = () => {
-    if (!title || !amount || selectedParticipants.length === 0 || paidBy.length === 0) return
+    if (!amount || selectedParticipants.length === 0 || paidBy.length === 0) return
 
     onAdd({
-      title,
+      title: title.trim() || "Gasto",
       amount: Number.parseFloat(amount),
       paidBy: paidBy, // Send IDs (usernames)
       participants: selectedParticipants, // Send IDs (usernames)
@@ -89,16 +89,6 @@ export function AddExpenseModal({ isOpen, onClose, onAdd, members, currentUserId
 
               <div className="space-y-5">
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground mb-2 block">Descripción</label>
-                  <Input
-                    placeholder="¿Para qué es este gasto?"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    className="h-14 text-lg rounded-xl border-border/50 bg-muted/30"
-                  />
-                </div>
-
-                <div>
                   <label className="text-sm font-medium text-muted-foreground mb-2 block">Monto</label>
                   <div className="relative">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-2xl font-bold text-muted-foreground">
@@ -106,12 +96,24 @@ export function AddExpenseModal({ isOpen, onClose, onAdd, members, currentUserId
                     </span>
                     <Input
                       type="number"
+                      inputMode="decimal"
                       placeholder="0.00"
                       value={amount}
                       onChange={(e) => setAmount(e.target.value)}
                       className="h-16 text-3xl font-bold pl-10 rounded-xl border-border/50 bg-muted/30 tabular-nums"
+                      autoFocus
                     />
                   </div>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground mb-2 block">Descripción (opcional)</label>
+                  <Input
+                    placeholder="¿Para qué es este gasto?"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    className="h-14 text-lg rounded-xl border-border/50 bg-muted/30"
+                  />
                 </div>
 
                 <div>
@@ -164,7 +166,7 @@ export function AddExpenseModal({ isOpen, onClose, onAdd, members, currentUserId
 
               <Button
                 onClick={handleSubmit}
-                disabled={!title || !amount || selectedParticipants.length === 0 || paidBy.length === 0}
+                disabled={!amount || selectedParticipants.length === 0 || paidBy.length === 0}
                 className="w-full h-14 text-lg font-semibold rounded-xl bg-foreground text-background hover:bg-foreground/90 transition-all disabled:opacity-50"
               >
                 Agregar Gasto
