@@ -115,12 +115,23 @@ export function ManageGroupModal({
                       key={emoji}
                       whileTap={{ scale: 0.9 }}
                       onClick={() => setTempGroupEmoji(emoji)}
-                      className={`flex-shrink-0 w-12 h-12 rounded-2xl flex items-center justify-center text-2xl transition-all ${tempGroupEmoji === emoji
-                        ? "bg-primary text-primary-foreground shadow-lg scale-110"
-                        : "bg-muted/50 text-muted-foreground hover:bg-muted"
+                      layout
+                      className={`flex-shrink-0 rounded-2xl flex items-center justify-center gap-2 transition-all ${tempGroupEmoji === emoji
+                        ? "bg-primary text-primary-foreground shadow-lg px-4 h-12"
+                        : "bg-muted/50 text-muted-foreground hover:bg-muted w-12 h-12"
                         }`}
                     >
-                      {emoji}
+                      <span className="text-2xl">{emoji}</span>
+                      {tempGroupEmoji === emoji && (
+                        <motion.span
+                          initial={{ opacity: 0, width: 0 }}
+                          animate={{ opacity: 1, width: "auto" }}
+                          exit={{ opacity: 0, width: 0 }}
+                          className="text-sm font-semibold whitespace-nowrap"
+                        >
+                          {tempGroupName || "Grupo"}
+                        </motion.span>
+                      )}
                     </motion.button>
                   ))}
                 </div>
