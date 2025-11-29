@@ -20,6 +20,28 @@ export const metadata: Metadata = {
     statusBarStyle: 'black-translucent',
     title: 'Quota',
   },
+  openGraph: {
+    title: 'Quota | Divide Gastos',
+    description: 'Divide gastos con amigos y familia de forma sencilla. Gestiona grupos, monedas y pagos.',
+    url: 'https://quota.app',
+    siteName: 'Quota',
+    images: [
+      {
+        url: '/Favicon.png',
+        width: 512,
+        height: 512,
+        alt: 'Quota - Divide Gastos',
+      },
+    ],
+    locale: 'es_ES',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary',
+    title: 'Quota | Divide Gastos',
+    description: 'Divide gastos con amigos y familia de forma sencilla',
+    images: ['/Favicon.png'],
+  },
 }
 
 export const viewport: Viewport = {
