@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic"
 
 import { useState, useMemo, useEffect, useCallback } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Plus, ArrowDownUp, TrendingUp, TrendingDown, Users } from "lucide-react"
+import { Plus, ArrowDownUp, TrendingUp, TrendingDown, Users, Settings } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { AnimatedNumber } from "@/components/animated-number"
@@ -511,6 +511,16 @@ export default function ExpenseSplitter() {
           transition={{ duration: 0.3 }}
         >
           <div className="flex items-center justify-between p-4">
+            {/* Settings Button - Left */}
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setIsManageGroupOpen(true)}
+              className="p-2 rounded-xl bg-muted/50 hover:bg-muted transition-colors"
+            >
+              <Settings className="h-5 w-5 text-muted-foreground" />
+            </motion.button>
+
+            {/* Group Selector - Center */}
             <GroupSelector
               groups={groupsForSelector}
               selectedGroup={groupsForSelector.find((g) => g.id === selectedGroupId) || groupsForSelector[0]}
@@ -518,16 +528,15 @@ export default function ExpenseSplitter() {
               onCreateGroup={() => setIsCreateGroupOpen(true)}
             />
 
-            <div className="flex items-center gap-2">
-              <motion.button whileTap={{ scale: 0.95 }} onClick={() => setIsProfileOpen(true)} className="relative">
-                <Avatar className="h-9 w-9 border-2 border-border/50">
-                  <AvatarImage src={currentUser?.avatarUrl || undefined} />
-                  <AvatarFallback className="text-xs bg-muted font-medium">
-                    {currentUser?.displayName.slice(0, 2).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-              </motion.button>
-            </div>
+            {/* Profile - Right */}
+            <motion.button whileTap={{ scale: 0.95 }} onClick={() => setIsProfileOpen(true)} className="relative">
+              <Avatar className="h-9 w-9 border-2 border-border/50">
+                <AvatarImage src={currentUser?.avatarUrl || undefined} />
+                <AvatarFallback className="text-xs bg-muted font-medium">
+                  {currentUser?.displayName.slice(0, 2).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+            </motion.button>
           </div>
         </motion.header>
 
@@ -576,29 +585,11 @@ export default function ExpenseSplitter() {
           transition={{ delay: 0.15 }}
         >
           <Button
-            onClick={() => {
-              const bankLink = currentGroup.preferred_bank ? getBankAppLink(currentGroup.preferred_bank) : null
-              if (bankLink) {
-                window.open(bankLink, '_blank')
-              } else {
-                setIsSettleOpen(true)
-              }
-            }}
+            onClick={() => setIsSettleOpen(true)}
             variant="ghost"
             className="h-10 px-6 rounded-full text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all gap-2"
           >
-            {currentGroup.preferred_bank && BANKS[currentGroup.preferred_bank] ? (
-              <div className="relative w-5 h-5">
-                <Image
-                  src={BANKS[currentGroup.preferred_bank].icon}
-                  alt={BANKS[currentGroup.preferred_bank].name}
-                  fill
-                  className="object-contain"
-                />
-              </div>
-            ) : (
-              <ArrowDownUp className="h-4 w-4" />
-            )}
+            <ArrowDownUp className="h-4 w-4" />
             Saldar Cuentas
           </Button>
         </motion.section>
