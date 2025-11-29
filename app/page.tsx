@@ -21,7 +21,8 @@ import { expenseService } from "@/lib/services/expense.service"
 import { userService } from "@/lib/services/user.service"
 import { createClient } from "@/lib/supabase/client"
 import { type CurrencyCode } from "@/lib/utils/currency"
-import { type BankCode, getBankAppLink } from "@/lib/utils/bank"
+import { type BankCode, getBankAppLink, BANKS } from "@/lib/utils/bank"
+import Image from "next/image"
 
 export default function ExpenseSplitter() {
   const [groups, setGroups] = useState<Group[]>([])
@@ -254,6 +255,37 @@ export default function ExpenseSplitter() {
   }) => {
     if (!currentGroup || !currentUser) return
 
+    // Optimistic update
+    const tempExpenseId = `temp-${Date.now()}`
+    const tempExpense = {
+      id: tempExpenseId,
+      group_id: currentGroup.id,
+      description: expenseData.title,
+      amount: expenseData.amount,
+      created_by: currentUser.id,
+      created_at: new Date().toISOString(),
+      paid_by: expenseData.paidBy.map(userId => ({
+        user_id: userId,
+        amount: expenseData.amount / expenseData.paidBy.length // Simplified for display
+      })),
+      participants: expenseData.participants.map(userId => ({
+        user_id: userId,
+        amount: expenseData.amount / expenseData.participants.length // Simplified for display
+      }))
+    }
+
+    // Update local state immediately
+    const previousGroups = [...groups]
+    setGroups(groups.map(g => {
+      if (g.id === currentGroup.id) {
+        return {
+          ...g,
+          expenses: [tempExpense, ...g.expenses]
+        }
+      }
+      return g
+    }))
+
     const { error } = await expenseService.createExpense(
       currentGroup.id,
       currentUser.id,
@@ -262,6 +294,9 @@ export default function ExpenseSplitter() {
 
     if (!error) {
       await loadData()
+    } else {
+      // Revert on error
+      setGroups(previousGroups)
     }
   }
 
@@ -541,9 +576,20 @@ export default function ExpenseSplitter() {
               }
             }}
             variant="ghost"
-            className="h-10 px-6 rounded-full text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all"
+            className="h-10 px-6 rounded-full text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all gap-2"
           >
-            <ArrowDownUp className="h-4 w-4 mr-2" />
+            {currentGroup.preferred_bank && BANKS[currentGroup.preferred_bank] ? (
+              <div className="relative w-5 h-5">
+                <Image
+                  src={BANKS[currentGroup.preferred_bank].icon}
+                  alt={BANKS[currentGroup.preferred_bank].name}
+                  fill
+                  className="object-contain"
+                />
+              </div>
+            ) : (
+              <ArrowDownUp className="h-4 w-4" />
+            )}
             Saldar Cuentas
           </Button>
         </motion.section>

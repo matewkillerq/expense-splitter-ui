@@ -205,6 +205,19 @@ export function ManageGroupModal({
                           centsClassName="text-[10px] align-super ml-0.5"
                         />
                       </p>
+                      {groupBank && BANKS[groupBank] && (
+                        <div className="flex items-center gap-1.5 mt-1 text-xs text-muted-foreground">
+                          <div className="relative w-4 h-4">
+                            <Image
+                              src={BANKS[groupBank].icon}
+                              alt={BANKS[groupBank].name}
+                              fill
+                              className="object-contain"
+                            />
+                          </div>
+                          <span>{BANKS[groupBank].name}</span>
+                        </div>
+                      )}
                     </div>
                   </motion.button>
                 )}
