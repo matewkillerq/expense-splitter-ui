@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { X, Plus, Trash2, Users, AlertTriangle } from "lucide-react"
+import { X, Plus, Trash2, Settings, AlertTriangle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { UserAvatar } from "@/components/user-avatar"
@@ -94,9 +94,9 @@ export function ManageGroupModal({
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="p-2 rounded-xl bg-primary/10">
-                    <Users className="h-5 w-5 text-primary" />
+                    <Settings className="h-5 w-5 text-primary" />
                   </div>
-                  <h2 className="text-xl font-bold text-foreground">Administrar Grupo</h2>
+                  <h2 className="text-xl font-bold text-foreground">Configuración del Grupo</h2>
                 </div>
                 <motion.button
                   whileTap={{ scale: 0.9 }}

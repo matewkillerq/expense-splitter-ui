@@ -699,6 +699,7 @@ export default function ExpenseSplitter() {
           settlements={settlements}
           simplifiedSettlements={settlements}
           onSettle={handleSettle}
+          preferredBank={currentGroup?.preferred_bank}
         />
         <CreateGroupModal
           isOpen={isCreateGroupOpen}

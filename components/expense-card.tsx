@@ -41,17 +41,22 @@ export function ExpenseCard({ title, amount, paidBy, participants, date, index, 
     : `$${amountPerParticipant.toFixed(2)} cada uno`
 
   const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-    const threshold = -60
-    const deleteThreshold = -150
+    const swipeThreshold = -80 // Must swipe at least 80px to trigger
+    const deleteThreshold = -140 // Must swipe 140px to delete directly
+    const velocityThreshold = 500 // Fast swipe velocity
 
-    if (info.offset.x < deleteThreshold) {
-      // Swipe largo -> Borrar directo
+    // Check if it's a fast swipe (velocity-based)
+    const isFastSwipe = Math.abs(info.velocity.x) > velocityThreshold
+
+    if (info.offset.x < deleteThreshold || (isFastSwipe && info.offset.x < swipeThreshold)) {
+      // Fast swipe or long swipe -> Delete
       onDelete?.()
-    } else if (info.offset.x < threshold) {
-      // Swipe medio -> Abrir
+      setIsOpen(false)
+    } else if (info.offset.x < swipeThreshold) {
+      // Medium swipe -> Open delete button
       setIsOpen(true)
     } else {
-      // Swipe corto -> Cerrar
+      // Short swipe or swipe right -> Close
       setIsOpen(false)
     }
   }
@@ -62,7 +67,10 @@ export function ExpenseCard({ title, amount, paidBy, participants, date, index, 
       <div className="absolute inset-0 bg-destructive rounded-2xl flex items-center justify-end pr-6 overflow-hidden">
         <motion.button
           style={{ opacity: iconOpacity, scale: iconScale }}
-          onClick={() => onDelete?.()}
+          onClick={() => {
+            onDelete?.()
+            setIsOpen(false)
+          }}
           className="flex items-center justify-center"
           aria-label="Eliminar"
         >
@@ -79,13 +87,14 @@ export function ExpenseCard({ title, amount, paidBy, participants, date, index, 
         }}
         style={{ x }}
         drag="x"
-        dragConstraints={{ left: -200, right: 0 }}
-        dragElastic={{ right: 0.1, left: 0.5 }}
+        dragConstraints={{ left: -160, right: 0 }}
+        dragElastic={{ right: 0, left: 0.2 }}
+        dragMomentum={false}
         onDragEnd={handleDragEnd}
         transition={{
           type: "spring",
-          stiffness: 400,
-          damping: 30
+          stiffness: 500,
+          damping: 35
         }}
         className="bg-card rounded-2xl p-5 shadow-sm border border-border/50 relative z-10"
       >

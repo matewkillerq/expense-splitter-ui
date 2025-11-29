@@ -7,11 +7,19 @@ import "./globals.css"
 const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
 
-// <CHANGE> Updated metadata for expense splitter app
 export const metadata: Metadata = {
-  title: "Splitwise | Group Expenses",
-  description: "Split expenses with friends and family easily",
-    generator: 'v0.app'
+  title: "Quota | Divide Gastos",
+  description: "Divide gastos con amigos y familia de forma sencilla",
+  generator: 'v0.app',
+  icons: {
+    icon: '/Favicon.png',
+    apple: '/Favicon.png',
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'Quota',
+  },
 }
 
 export const viewport: Viewport = {
