@@ -21,6 +21,7 @@ import { expenseService } from "@/lib/services/expense.service"
 import { userService } from "@/lib/services/user.service"
 import { createClient } from "@/lib/supabase/client"
 import { type CurrencyCode } from "@/lib/utils/currency"
+import { type BankCode } from "@/lib/utils/bank"
 
 export default function ExpenseSplitter() {
   const [groups, setGroups] = useState<Group[]>([])
@@ -353,10 +354,10 @@ export default function ExpenseSplitter() {
     }
   }
 
-  const handleUpdateGroup = async (name: string, emoji: string, currency: CurrencyCode) => {
+  const handleUpdateGroup = async (name: string, emoji: string, currency: CurrencyCode, bank?: BankCode | null) => {
     if (!currentGroup) return
 
-    const { error } = await groupService.updateGroup(currentGroup.id, { name, emoji, currency })
+    const { error } = await groupService.updateGroup(currentGroup.id, { name, emoji, currency, preferred_bank: bank })
     if (!error) {
       await loadData()
     }
@@ -523,31 +524,35 @@ export default function ExpenseSplitter() {
           </motion.div>
         </motion.section>
 
-        {/* Action Buttons */}
+        {/* Settle Button - Centered and Subtle */}
         <motion.section
-          className="px-6 pb-6"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
+          className="px-6 pb-6 flex justify-center"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
           transition={{ delay: 0.15 }}
         >
-          <div className="flex gap-3">
-            <Button
-              onClick={() => setIsSettleOpen(true)}
-              variant="outline"
-              className="flex-1 h-14 rounded-2xl font-semibold border-border/50 hover:bg-muted/50 transition-all"
-            >
-              <ArrowDownUp className="h-5 w-5 mr-2" />
-              Saldar
-            </Button>
-            <Button
-              onClick={() => setIsAddExpenseOpen(true)}
-              className="flex-[2] h-14 rounded-2xl font-semibold bg-foreground text-background hover:bg-foreground/90 transition-all"
-            >
-              <Plus className="h-5 w-5 mr-2" />
-              Agregar Gasto
-            </Button>
-          </div>
+          <Button
+            onClick={() => setIsSettleOpen(true)}
+            variant="ghost"
+            className="h-10 px-6 rounded-full text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all"
+          >
+            <ArrowDownUp className="h-4 w-4 mr-2" />
+            Saldar Cuentas
+          </Button>
         </motion.section>
+
+        {/* Floating Add Button */}
+        <motion.button
+          onClick={() => setIsAddExpenseOpen(true)}
+          className="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-foreground text-background shadow-lg hover:shadow-xl transition-all z-50 flex items-center justify-center"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          initial={{ opacity: 0, scale: 0 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.3, type: "spring" }}
+        >
+          <Plus className="h-6 w-6" />
+        </motion.button>
 
         {/* Expenses List */}
         <section className="px-4">
@@ -610,6 +615,7 @@ export default function ExpenseSplitter() {
           groupName={currentGroup.name}
           groupEmoji={currentGroup.emoji}
           groupCurrency={currentGroup.currency}
+          groupBank={currentGroup.preferred_bank}
           totalExpenses={currentGroup.expenses.reduce((sum, expense) => sum + expense.amount, 0)}
           onAddMember={handleAddMember}
           onRemoveMember={handleRemoveMember}

@@ -1,11 +1,13 @@
 import { createClient } from '@/lib/supabase/client'
 import type { CurrencyCode } from '@/lib/utils/currency'
+import type { BankCode } from '@/lib/utils/bank'
 
 export interface Group {
     id: string
     name: string
     emoji: string
     currency: CurrencyCode
+    preferred_bank?: BankCode | null
     members: string[] // usernames
     memberDetails: { username: string; avatarUrl: string | null }[]
     expenses: Expense[]
@@ -117,6 +119,7 @@ export const groupService = {
                         name: group.name,
                         emoji: group.emoji,
                         currency: (group.currency || 'USD') as CurrencyCode,
+                        preferred_bank: (group.preferred_bank as BankCode) || null,
                         members,
                         memberDetails,
                         expenses: expensesWithDetails,
@@ -221,7 +224,7 @@ export const groupService = {
      */
     async updateGroup(
         groupId: string,
-        updates: { name?: string; emoji?: string; currency?: CurrencyCode }
+        updates: { name?: string; emoji?: string; currency?: CurrencyCode; preferred_bank?: BankCode | null }
     ): Promise<{ error: string | null }> {
         try {
             const supabase = createClient()

@@ -7,7 +7,9 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { UserAvatar } from "@/components/user-avatar"
 import { CURRENCIES, type CurrencyCode } from "@/lib/utils/currency"
+import { BANKS, type BankCode } from "@/lib/utils/bank"
 import { FormattedAmount } from "@/components/formatted-amount"
+import Image from "next/image"
 
 interface ManageGroupModalProps {
   isOpen: boolean
@@ -16,10 +18,11 @@ interface ManageGroupModalProps {
   groupName: string
   groupEmoji: string
   groupCurrency: CurrencyCode
+  groupBank?: BankCode | null
   totalExpenses: number
   onAddMember: (name: string) => void
   onRemoveMember: (id: string) => void
-  onUpdateGroup: (name: string, emoji: string, currency: CurrencyCode) => void
+  onUpdateGroup: (name: string, emoji: string, currency: CurrencyCode, bank?: BankCode | null) => void
   onDeleteGroup?: () => void
 }
 
@@ -32,6 +35,7 @@ export function ManageGroupModal({
   groupName,
   groupEmoji,
   groupCurrency,
+  groupBank,
   totalExpenses,
   onAddMember,
   onRemoveMember,
@@ -43,6 +47,7 @@ export function ManageGroupModal({
   const [tempGroupName, setTempGroupName] = useState(groupName)
   const [tempGroupEmoji, setTempGroupEmoji] = useState(groupEmoji)
   const [tempGroupCurrency, setTempGroupCurrency] = useState<CurrencyCode>(groupCurrency)
+  const [tempGroupBank, setTempGroupBank] = useState<BankCode | null>(groupBank || null)
   const [confirmDelete, setConfirmDelete] = useState(false)
 
   const handleAddMember = () => {
@@ -54,7 +59,7 @@ export function ManageGroupModal({
 
   const handleGuardarGroup = () => {
     if (tempGroupName.trim()) {
-      onUpdateGroup(tempGroupName.trim(), tempGroupEmoji, tempGroupCurrency)
+      onUpdateGroup(tempGroupName.trim(), tempGroupEmoji, tempGroupCurrency, tempGroupBank)
       setEditingGroup(false)
     }
   }
@@ -137,6 +142,31 @@ export function ManageGroupModal({
                         ))}
                       </div>
                     </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-muted-foreground">Banco Preferido (Opcional)</label>
+                      <div className="grid grid-cols-3 gap-2">
+                        {(Object.keys(BANKS) as BankCode[]).map((code) => (
+                          <motion.button
+                            key={code}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => setTempGroupBank(tempGroupBank === code ? null : code)}
+                            className={`h-16 rounded-xl flex flex-col items-center justify-center gap-1 transition-all ${tempGroupBank === code
+                              ? "bg-primary/10 ring-2 ring-primary"
+                              : "bg-muted/30 hover:bg-muted/50"
+                              }`}
+                          >
+                            <div className="relative w-8 h-8">
+                              <Image
+                                src={BANKS[code].icon}
+                                alt={BANKS[code].name}
+                                fill
+                                className="object-contain"
+                              />
+                            </div>
+                          </motion.button>
+                        ))}
+                      </div>
+                    </div>
                     <div className="flex gap-2">
                       <Button onClick={handleGuardarGroup} className="flex-1 h-10 rounded-xl">
                         Guardar
@@ -156,6 +186,7 @@ export function ManageGroupModal({
                       setTempGroupName(groupName)
                       setTempGroupEmoji(groupEmoji)
                       setTempGroupCurrency(groupCurrency)
+                      setTempGroupBank(groupBank || null)
                       setEditingGroup(true)
                     }}
                     className="w-full flex items-center gap-3 text-left"
