@@ -392,9 +392,28 @@ export default function ExpenseSplitter() {
   const handleUpdateGroup = async (name: string, emoji: string, currency: CurrencyCode, bank?: BankCode | null) => {
     if (!currentGroup) return
 
+    // Optimistic update
+    const previousGroups = [...groups]
+    const updatedGroup = {
+      ...currentGroup,
+      name,
+      emoji,
+      currency,
+      preferred_bank: bank
+    }
+
+    setGroups(groups.map(g => g.id === currentGroup.id ? updatedGroup : g))
+
     const { error } = await groupService.updateGroup(currentGroup.id, { name, emoji, currency, preferred_bank: bank })
+
     if (!error) {
-      await loadData()
+      // Background sync
+      loadData()
+    } else {
+      console.error("Error updating group:", error)
+      // Revert on error
+      setGroups(previousGroups)
+      alert("Error al guardar los cambios. Verifica tu conexión.")
     }
   }
 

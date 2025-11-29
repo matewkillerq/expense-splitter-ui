@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { X, Plus, Trash2, Users, AlertTriangle } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -48,6 +48,16 @@ export function ManageGroupModal({
   const [tempGroupEmoji, setTempGroupEmoji] = useState(groupEmoji)
   const [tempGroupCurrency, setTempGroupCurrency] = useState<CurrencyCode>(groupCurrency)
   const [tempGroupBank, setTempGroupBank] = useState<BankCode | null>(groupBank || null)
+
+  useEffect(() => {
+    if (isOpen) {
+      setTempGroupName(groupName)
+      setTempGroupEmoji(groupEmoji)
+      setTempGroupCurrency(groupCurrency)
+      setTempGroupBank(groupBank || null)
+      setEditingGroup(false)
+    }
+  }, [isOpen, groupName, groupEmoji, groupCurrency, groupBank])
   const [confirmDelete, setConfirmDelete] = useState(false)
 
   const handleAddMember = () => {
