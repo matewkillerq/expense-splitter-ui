@@ -43,7 +43,6 @@ export function ManageGroupModal({
   onDeleteGroup,
 }: ManageGroupModalProps) {
   const [newMemberName, setNewMemberName] = useState("")
-  const [editingGroup, setEditingGroup] = useState(false)
   const [tempGroupName, setTempGroupName] = useState(groupName)
   const [tempGroupEmoji, setTempGroupEmoji] = useState(groupEmoji)
   const [tempGroupCurrency, setTempGroupCurrency] = useState<CurrencyCode>(groupCurrency)
@@ -55,7 +54,6 @@ export function ManageGroupModal({
       setTempGroupEmoji(groupEmoji)
       setTempGroupCurrency(groupCurrency)
       setTempGroupBank(groupBank || null)
-      setEditingGroup(false)
     }
   }, [isOpen, groupName, groupEmoji, groupCurrency, groupBank])
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -70,7 +68,6 @@ export function ManageGroupModal({
   const handleGuardarGroup = () => {
     if (tempGroupName.trim()) {
       onUpdateGroup(tempGroupName.trim(), tempGroupEmoji, tempGroupCurrency, tempGroupBank)
-      setEditingGroup(false)
     }
   }
 
@@ -110,150 +107,106 @@ export function ManageGroupModal({
                 </motion.button>
               </div>
 
-              {/* Group Info */}
-              <div className="p-4 rounded-2xl bg-muted/30">
-                {editingGroup ? (
-                  <div className="space-y-3">
-                    <div className="flex gap-2 flex-wrap">
-                      {groupEmojis.map((emoji) => (
-                        <motion.button
-                          key={emoji}
-                          whileTap={{ scale: 0.9 }}
-                          onClick={() => setTempGroupEmoji(emoji)}
-                          className={`w-10 h-10 rounded-lg flex items-center justify-center text-xl transition-all ${tempGroupEmoji === emoji ? "bg-primary/20 ring-2 ring-primary" : "bg-muted/50"
-                            }`}
-                        >
-                          {emoji}
-                        </motion.button>
-                      ))}
-                    </div>
-                    <Input
-                      value={tempGroupName}
-                      onChange={(e) => setTempGroupName(e.target.value)}
-                      className="h-12 rounded-xl border-border/50 bg-card"
-                      placeholder="Nombre del grupo"
-                    />
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-muted-foreground">Moneda</label>
-                      <div className="flex gap-2">
-                        {(Object.keys(CURRENCIES) as CurrencyCode[]).map((code) => (
-                          <motion.button
-                            key={code}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => setTempGroupCurrency(code)}
-                            className={`flex-1 h-10 rounded-xl flex items-center justify-center gap-2 transition-all ${tempGroupCurrency === code
-                              ? "bg-primary text-primary-foreground"
-                              : "bg-muted/50 text-muted-foreground hover:bg-muted"
-                              }`}
-                          >
-                            <span className="text-lg">{CURRENCIES[code].symbol}</span>
-                            <span className="text-sm font-medium">{code}</span>
-                          </motion.button>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-muted-foreground">Banco Preferido (Opcional)</label>
-                      <div className="grid grid-cols-3 gap-2">
-                        {(Object.keys(BANKS) as BankCode[]).map((code) => (
-                          <motion.button
-                            key={code}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => setTempGroupBank(tempGroupBank === code ? null : code)}
-                            className={`h-16 rounded-xl flex flex-col items-center justify-center gap-1 transition-all ${tempGroupBank === code
-                              ? "bg-primary/10 ring-2 ring-primary"
-                              : "bg-muted/30 hover:bg-muted/50"
-                              }`}
-                          >
-                            <div className="relative w-8 h-8">
-                              <Image
-                                src={BANKS[code].icon}
-                                alt={BANKS[code].name}
-                                fill
-                                className="object-contain"
-                              />
-                            </div>
-                          </motion.button>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button onClick={handleGuardarGroup} className="flex-1 h-10 rounded-xl">
-                        Guardar
-                      </Button>
-                      <Button
-                        onClick={() => setEditingGroup(false)}
-                        variant="outline"
-                        className="flex-1 h-10 rounded-xl"
+              {/* Group Identity */}
+              <div className="flex flex-col items-center gap-4">
+                <div className="flex gap-2 overflow-x-auto w-full justify-center pb-2 no-scrollbar px-4">
+                  {groupEmojis.map((emoji) => (
+                    <motion.button
+                      key={emoji}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => setTempGroupEmoji(emoji)}
+                      className={`flex-shrink-0 w-12 h-12 rounded-2xl flex items-center justify-center text-2xl transition-all ${tempGroupEmoji === emoji
+                        ? "bg-primary text-primary-foreground shadow-lg scale-110"
+                        : "bg-muted/50 text-muted-foreground hover:bg-muted"
+                        }`}
+                    >
+                      {emoji}
+                    </motion.button>
+                  ))}
+                </div>
+
+                <Input
+                  value={tempGroupName}
+                  onChange={(e) => setTempGroupName(e.target.value)}
+                  className="h-14 text-center text-2xl font-bold border-none bg-transparent shadow-none focus-visible:ring-0 placeholder:text-muted-foreground/50"
+                  placeholder="Nombre del grupo"
+                />
+              </div>
+
+              {/* Settings Section */}
+              <div className="space-y-4">
+                <div className="bg-muted/30 rounded-2xl p-1 flex gap-1">
+                  {(Object.keys(CURRENCIES) as CurrencyCode[]).map((code) => (
+                    <button
+                      key={code}
+                      onClick={() => setTempGroupCurrency(code)}
+                      className={`flex-1 h-9 rounded-xl flex items-center justify-center gap-1.5 text-sm font-medium transition-all ${tempGroupCurrency === code
+                        ? "bg-background text-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
+                        }`}
+                    >
+                      <span>{CURRENCIES[code].symbol}</span>
+                      {code}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="bg-muted/30 rounded-2xl p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium text-muted-foreground">Banco Preferido</label>
+                    {tempGroupBank && (
+                      <button
+                        onClick={() => setTempGroupBank(null)}
+                        className="text-xs text-primary hover:underline"
                       >
-                        Cancelar
-                      </Button>
-                    </div>
+                        Limpiar
+                      </button>
+                    )}
                   </div>
-                ) : (
-                  <motion.button
-                    onClick={() => {
-                      setTempGroupName(groupName)
-                      setTempGroupEmoji(groupEmoji)
-                      setTempGroupCurrency(groupCurrency)
-                      setTempGroupBank(groupBank || null)
-                      setEditingGroup(true)
-                    }}
-                    className="w-full bg-muted/30 p-4 rounded-2xl border border-border/50 hover:bg-muted/50 transition-colors text-left"
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-background flex items-center justify-center text-3xl shadow-sm">
-                        {groupEmoji}
-                      </div>
-                      <div className="flex-1 space-y-1">
-                        <div className="flex items-center justify-between">
-                          <h3 className="font-semibold text-lg text-foreground">{groupName}</h3>
-                          <span className="text-xs font-medium text-primary bg-primary/10 px-2 py-1 rounded-full">
-                            Editar
-                          </span>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-2 mt-2">
-                          <div className="bg-background/50 p-2 rounded-lg">
-                            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Moneda</p>
-                            <p className="text-sm font-medium">{groupCurrency}</p>
-                          </div>
-                          <div className="bg-background/50 p-2 rounded-lg">
-                            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Banco</p>
-                            {groupBank && BANKS[groupBank] ? (
-                              <div className="flex items-center gap-1.5">
-                                <div className="relative w-4 h-4">
-                                  <Image
-                                    src={BANKS[groupBank].icon}
-                                    alt={BANKS[groupBank].name}
-                                    fill
-                                    className="object-contain"
-                                  />
-                                </div>
-                                <span className="text-sm font-medium truncate">{BANKS[groupBank].name}</span>
-                              </div>
-                            ) : (
-                              <p className="text-sm text-muted-foreground italic">No seleccionado</p>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="pt-2 mt-2 border-t border-border/50 flex justify-between items-center">
-                          <span className="text-xs text-muted-foreground">Total gastado</span>
-                          <FormattedAmount
-                            amount={totalExpenses}
-                            currency={groupCurrency}
-                            className="font-semibold text-foreground"
-                            symbolClassName="text-xs mr-0.5"
-                            centsClassName="text-[10px] align-super ml-0.5"
+                  <div className="grid grid-cols-5 gap-2">
+                    {(Object.keys(BANKS) as BankCode[]).map((code) => (
+                      <motion.button
+                        key={code}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => setTempGroupBank(tempGroupBank === code ? null : code)}
+                        className={`aspect-square rounded-xl flex flex-col items-center justify-center gap-1 transition-all ${tempGroupBank === code
+                          ? "bg-background ring-2 ring-primary shadow-sm"
+                          : "bg-background/50 hover:bg-background"
+                          }`}
+                        title={BANKS[code].name}
+                      >
+                        <div className="relative w-6 h-6">
+                          <Image
+                            src={BANKS[code].icon}
+                            alt={BANKS[code].name}
+                            fill
+                            className="object-contain"
                           />
                         </div>
-                      </div>
-                    </div>
-                  </motion.button>
-                )}
+                      </motion.button>
+                    ))}
+                  </div>
+                  {tempGroupBank && (
+                    <p className="text-xs text-center text-muted-foreground">
+                      Seleccionado: <span className="font-medium text-foreground">{BANKS[tempGroupBank].name}</span>
+                    </p>
+                  )}
+                </div>
               </div>
+
+              {/* Save Button */}
+              <Button
+                onClick={handleGuardarGroup}
+                className="w-full h-12 rounded-xl text-lg font-semibold"
+                disabled={
+                  tempGroupName === groupName &&
+                  tempGroupEmoji === groupEmoji &&
+                  tempGroupCurrency === groupCurrency &&
+                  tempGroupBank === groupBank
+                }
+              >
+                Guardar Cambios
+              </Button>
 
               {/* Agregar Miembro */}
               <div className="flex gap-2">

@@ -406,7 +406,13 @@ export default function ExpenseSplitter() {
       console.error("Error updating group:", error)
       // Revert on error
       setGroups(previousGroups)
-      alert("Error al guardar los cambios. Verifica tu conexión.")
+
+      const isBankUpdate = bank !== currentGroup.preferred_bank
+      if (isBankUpdate) {
+        alert("⚠️ No se pudo guardar el banco.\n\nEs probable que falte la columna 'preferred_bank' en la base de datos.\nPor favor ejecuta la migración 'add_preferred_bank_to_groups.sql' en Supabase.")
+      } else {
+        alert("Error al guardar los cambios del grupo. Verifica tu conexión.")
+      }
     }
   }
 
