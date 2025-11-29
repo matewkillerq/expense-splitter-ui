@@ -1,6 +1,7 @@
 "use client"
 import { motion, useMotionValue, useTransform, PanInfo } from "framer-motion"
 import { UserAvatar } from "@/components/user-avatar"
+import { FormattedAmount } from "@/components/formatted-amount"
 import { Trash2 } from "lucide-react"
 import { formatDate } from "@/lib/utils"
 import { useState } from "react"
@@ -12,11 +13,12 @@ interface ExpenseCardProps {
   participants: { username: string; avatarUrl?: string | null }[]
   date: string
   index: number
+  currency?: string
   onDelete?: () => void
   currentUserId?: string
 }
 
-export function ExpenseCard({ title, amount, paidBy, participants, date, index, onDelete, currentUserId }: ExpenseCardProps) {
+export function ExpenseCard({ title, amount, paidBy, participants, date, index, currency = 'USD', onDelete, currentUserId }: ExpenseCardProps) {
   const [isOpen, setIsOpen] = useState(false)
   const x = useMotionValue(0)
 
@@ -96,9 +98,12 @@ export function ExpenseCard({ title, amount, paidBy, participants, date, index, 
           </div>
           <div className="text-right shrink-0">
             <p className="font-bold text-xl text-foreground tabular-nums">
-              <span className="align-top text-sm mr-0.5">$</span>
-              <span className="mr-0.5">{Number(Math.floor(amount)).toLocaleString('en-US', { useGrouping: true }).replace(/,/g, '.')}</span>
-              <span className="align-super text-xs">{(amount % 1).toFixed(2).slice(2)}</span>
+              <FormattedAmount
+                amount={amount}
+                currency={currency as any}
+                symbolClassName="mr-0.5"
+                centsClassName="align-super text-xs"
+              />
             </p>
             <p className="text-xs text-muted-foreground mt-0.5">{formatDate(date)}</p>
           </div>

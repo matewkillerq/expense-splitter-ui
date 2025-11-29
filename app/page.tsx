@@ -494,7 +494,11 @@ export default function ExpenseSplitter() {
           transition={{ delay: 0.1 }}
         >
           <p className="text-sm text-muted-foreground text-center mb-2">Tu balance</p>
-          <AnimatedNumber value={userBalance} className="text-5xl font-bold tracking-tight" />
+          <AnimatedNumber
+            value={userBalance}
+            currency={currentGroup?.currency}
+            className="text-5xl font-bold tracking-tight"
+          />
           <motion.div
             className="flex items-center justify-center gap-2 mt-3"
             initial={{ opacity: 0 }}
@@ -571,6 +575,7 @@ export default function ExpenseSplitter() {
                   })}
                   date={expense.date}
                   index={index}
+                  currency={currentGroup.currency}
                   currentUserId={currentUser?.username}
                   onDelete={() => handleDeleteExpense(expense.id)}
                 />

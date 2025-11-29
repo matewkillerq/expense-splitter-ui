@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { UserAvatar } from "@/components/user-avatar"
 import { CURRENCIES, type CurrencyCode } from "@/lib/utils/currency"
+import { FormattedAmount } from "@/components/formatted-amount"
 
 interface ManageGroupModalProps {
   isOpen: boolean
@@ -126,8 +127,8 @@ export function ManageGroupModal({
                             whileTap={{ scale: 0.95 }}
                             onClick={() => setTempGroupCurrency(code)}
                             className={`flex-1 h-10 rounded-xl flex items-center justify-center gap-2 transition-all ${tempGroupCurrency === code
-                                ? "bg-primary text-primary-foreground"
-                                : "bg-muted/50 text-muted-foreground hover:bg-muted"
+                              ? "bg-primary text-primary-foreground"
+                              : "bg-muted/50 text-muted-foreground hover:bg-muted"
                               }`}
                           >
                             <span className="text-lg">{CURRENCIES[code].symbol}</span>
@@ -163,7 +164,16 @@ export function ManageGroupModal({
                     <span className="text-3xl">{groupEmoji}</span>
                     <div>
                       <p className="font-semibold text-foreground">{groupName}</p>
-                      <p className="text-sm text-muted-foreground">Total gastado: ${totalExpenses.toFixed(2)}</p>
+                      <p className="text-sm text-muted-foreground flex items-center gap-1">
+                        Total gastado:
+                        <FormattedAmount
+                          amount={totalExpenses}
+                          currency={groupCurrency}
+                          className="font-medium text-foreground"
+                          symbolClassName="text-xs mr-0.5"
+                          centsClassName="text-[10px] align-super ml-0.5"
+                        />
+                      </p>
                     </div>
                   </motion.button>
                 )}

@@ -159,18 +159,31 @@ export const groupService = {
 
             if (profileError) throw profileError
 
-            const userIds = profiles.map((p) => p.id)
-            const usernames = profiles.map((p) => p.username)
+            const foundUsernames = profiles.map(p => p.username)
+            const missingUsernames = data.members.filter(m => !foundUsernames.includes(m))
 
-            // 3. Agregar miembros al grupo
-            const membersToInsert = userIds.map((id) => ({
-                group_id: group.id,
-                user_id: id,
-            }))
+            // 3. Agregar miembros existentes al grupo
+            if (profiles.length > 0) {
+                const membersToInsert = profiles.map((p) => ({
+                    group_id: group.id,
+                    user_id: p.id,
+                }))
 
-            const { error: memberError } = await supabase.from('group_members').insert(membersToInsert)
+                const { error: memberError } = await supabase.from('group_members').insert(membersToInsert)
+                if (memberError) throw memberError
+            }
 
-            if (memberError) throw memberError
+            // 4. Crear invitaciones pendientes para los no encontrados
+            if (missingUsernames.length > 0) {
+                const invitationsToInsert = missingUsernames.map(username => ({
+                    group_id: group.id,
+                    username: username,
+                    invited_by: userId
+                }))
+
+                const { error: inviteError } = await supabase.from('pending_invitations').insert(invitationsToInsert)
+                if (inviteError) throw inviteError
+            }
 
             return {
                 data: {
@@ -178,8 +191,8 @@ export const groupService = {
                     name: group.name,
                     emoji: group.emoji,
                     currency: (group.currency || 'USD') as CurrencyCode,
-                    members: usernames,
-                    memberDetails: usernames.map(u => ({ username: u, avatarUrl: null })),
+                    members: [...foundUsernames, ...missingUsernames],
+                    memberDetails: [...foundUsernames, ...missingUsernames].map(u => ({ username: u, avatarUrl: null })),
                     expenses: [],
                 },
                 error: null,
