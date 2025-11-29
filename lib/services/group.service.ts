@@ -70,8 +70,16 @@ export const groupService = {
                     const pendingMembersDetails = pendingMembers.map(username => ({ username, avatarUrl: null }))
 
                     // Combinar miembros activos y pendientes
-                    const members = [...activeMembers, ...pendingMembers]
-                    const memberDetails = [...activeMembersDetails, ...pendingMembersDetails]
+                    // Combinar miembros activos y pendientes y eliminar duplicados
+                    const allMembers = [...activeMembers, ...pendingMembers]
+                    const uniqueMembers = Array.from(new Set(allMembers))
+
+                    // Filtrar detalles para solo incluir miembros únicos
+                    const allDetails = [...activeMembersDetails, ...pendingMembersDetails]
+                    const uniqueDetails = uniqueMembers.map(m => allDetails.find(d => d.username === m)!)
+
+                    const members = uniqueMembers
+                    const memberDetails = uniqueDetails
 
                     // Obtener gastos
                     const { data: expenses } = await supabase
@@ -160,7 +168,8 @@ export const groupService = {
             if (profileError) throw profileError
 
             const foundUsernames = profiles.map(p => p.username)
-            const missingUsernames = data.members.filter(m => !foundUsernames.includes(m))
+            const foundUsernamesLower = foundUsernames.map(u => u.toLowerCase())
+            const missingUsernames = data.members.filter(m => !foundUsernamesLower.includes(m.toLowerCase()))
 
             // 3. Agregar miembros existentes al grupo
             if (profiles.length > 0) {
