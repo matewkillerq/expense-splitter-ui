@@ -511,15 +511,6 @@ export default function ExpenseSplitter() {
           transition={{ duration: 0.3 }}
         >
           <div className="flex items-center justify-between p-4">
-            <motion.button
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setIsManageGroupOpen(true)}
-              className="flex items-center gap-2 px-3 py-2 rounded-xl bg-muted/50 hover:bg-muted transition-colors"
-            >
-              <Users className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm font-medium text-foreground">{currentGroup.members.length}</span>
-            </motion.button>
-
             <GroupSelector
               groups={groupsForSelector}
               selectedGroup={groupsForSelector.find((g) => g.id === selectedGroupId) || groupsForSelector[0]}

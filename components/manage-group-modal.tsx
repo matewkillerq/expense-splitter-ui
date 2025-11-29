@@ -261,10 +261,6 @@ export function ManageGroupModal({
                 </AnimatePresence>
               </div>
 
-              <p className="text-center text-sm text-muted-foreground">
-                {members.length} member{members.length !== 1 ? "s" : ""} in group
-              </p>
-
               {onDeleteGroup && (
                 <div className="pt-4 border-t border-border/50">
                   {!confirmDelete ? (
