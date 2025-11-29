@@ -50,7 +50,7 @@ export function GroupSelector({ groups, selectedGroup, onSelectGroup, onCreateGr
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -10, scale: 0.95 }}
               transition={{ duration: 0.2 }}
-              className="absolute top-full left-0 mt-2 w-64 bg-card rounded-2xl shadow-xl border border-border/50 z-50 overflow-hidden"
+              className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-64 bg-card rounded-2xl shadow-xl border border-border/50 z-50 overflow-hidden"
             >
               <div className="p-2">
                 {groups.map((group) => (
@@ -60,18 +60,19 @@ export function GroupSelector({ groups, selectedGroup, onSelectGroup, onCreateGr
                       onSelectGroup(group)
                       setIsOpen(false)
                     }}
+                    layout
                     className={`w-full flex items-center justify-between p-3 rounded-xl transition-colors ${selectedGroup.id === group.id ? "bg-primary/10" : "hover:bg-muted/50"
                       }`}
                     whileTap={{ scale: 0.98 }}
                   >
                     <div className="flex items-center gap-3">
-                      <span className="text-xl">{group.emoji}</span>
+                      <motion.span layout className="text-xl">{group.emoji}</motion.span>
                       <div className="text-left">
-                        <p className="font-medium text-foreground">{group.name}</p>
-                        <p className="text-xs text-muted-foreground flex items-center gap-1">
+                        <motion.p layout className="font-medium text-foreground">{group.name}</motion.p>
+                        <motion.p layout className="text-xs text-muted-foreground flex items-center gap-1">
                           <Users className="h-3 w-3" />
                           {group.membersCount} miembro{group.membersCount !== 1 ? "s" : ""}
-                        </p>
+                        </motion.p>
                       </div>
                     </div>
                     {selectedGroup.id === group.id && <Check className="h-4 w-4 text-primary" />}

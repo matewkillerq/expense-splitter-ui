@@ -144,8 +144,37 @@ export function ManageGroupModal({
                 />
               </div>
 
+              {/* Current Group Info */}
+              <div className="bg-muted/20 rounded-2xl p-4 space-y-2">
+                <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold text-center">Configuración Actual</p>
+                <div className="flex items-center justify-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">{CURRENCIES[groupCurrency].symbol}</span>
+                    <span className="text-sm font-medium">{groupCurrency}</span>
+                  </div>
+                  {groupBank && BANKS[groupBank] && (
+                    <>
+                      <div className="w-px h-4 bg-border" />
+                      <div className="flex items-center gap-2">
+                        <div className="relative w-4 h-4">
+                          <Image
+                            src={BANKS[groupBank].icon}
+                            alt={BANKS[groupBank].name}
+                            fill
+                            className="object-contain"
+                          />
+                        </div>
+                        <span className="text-sm font-medium">{BANKS[groupBank].name}</span>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+
               {/* Settings Section */}
               <div className="space-y-4">
+                <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold text-center">Cambiar Configuración</p>
+
                 <div className="bg-muted/30 rounded-2xl p-1 flex gap-1">
                   {(Object.keys(CURRENCIES) as CurrencyCode[]).map((code) => (
                     <button
@@ -219,57 +248,61 @@ export function ManageGroupModal({
                 Guardar Cambios
               </Button>
 
-              {/* Agregar Miembro */}
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Agregar miembro (nombre de usuario)"
-                  value={newMemberName}
-                  onChange={(e) => setNewMemberName(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleAddMember()}
-                  className="h-12 rounded-xl border-border/50 bg-muted/30"
-                />
-                <Button
-                  onClick={handleAddMember}
-                  size="icon"
-                  className="h-12 w-12 rounded-xl bg-foreground text-background hover:bg-foreground/90"
-                >
-                  <Plus className="h-5 w-5" />
-                </Button>
-              </div>
+              {/* Members Section */}
+              <div className="space-y-3 pt-4 border-t border-border/50">
 
-              {/* Miembros List */}
-              <div className="space-y-2 max-h-[250px] overflow-y-auto">
-                <AnimatePresence mode="popLayout">
-                  {members.map((member, index) => (
-                    <motion.div
-                      key={member.id}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: 20, height: 0 }}
-                      transition={{ delay: index * 0.03 }}
-                      className="flex items-center justify-between p-3 rounded-xl bg-muted/30 group"
-                    >
-                      <div className="flex items-center gap-3">
-                        <UserAvatar
-                          name={member.name}
-                          avatarUrl={member.avatarUrl}
-                          className="h-10 w-10"
-                          fallbackClassName="bg-primary/10 text-primary font-medium"
-                        />
-                        <span className="font-medium text-foreground">{member.name}</span>
-                      </div>
-                      {members.length > 1 && (
-                        <motion.button
-                          whileTap={{ scale: 0.9 }}
-                          onClick={() => onRemoveMember(member.id)}
-                          className="p-2 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-all"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </motion.button>
-                      )}
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
+                {/* Agregar Miembro */}
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Agregar miembro (nombre de usuario)"
+                    value={newMemberName}
+                    onChange={(e) => setNewMemberName(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleAddMember()}
+                    className="h-12 rounded-xl border-border/50 bg-muted/30"
+                  />
+                  <Button
+                    onClick={handleAddMember}
+                    size="icon"
+                    className="h-12 w-12 rounded-xl bg-foreground text-background hover:bg-foreground/90"
+                  >
+                    <Plus className="h-5 w-5" />
+                  </Button>
+                </div>
+
+                {/* Miembros List */}
+                <div className="space-y-2 max-h-[250px] overflow-y-auto">
+                  <AnimatePresence mode="popLayout">
+                    {members.map((member, index) => (
+                      <motion.div
+                        key={member.id}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 20, height: 0 }}
+                        transition={{ delay: index * 0.03 }}
+                        className="flex items-center justify-between p-3 rounded-xl bg-muted/30 group"
+                      >
+                        <div className="flex items-center gap-3">
+                          <UserAvatar
+                            name={member.name}
+                            avatarUrl={member.avatarUrl}
+                            className="h-10 w-10"
+                            fallbackClassName="bg-primary/10 text-primary font-medium"
+                          />
+                          <span className="font-medium text-foreground">{member.name}</span>
+                        </div>
+                        {members.length > 1 && (
+                          <motion.button
+                            whileTap={{ scale: 0.9 }}
+                            onClick={() => onRemoveMember(member.id)}
+                            className="p-2 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-all"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </motion.button>
+                        )}
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                </div>
               </div>
 
               {onDeleteGroup && (
