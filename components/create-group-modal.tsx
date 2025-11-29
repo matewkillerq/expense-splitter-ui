@@ -6,11 +6,12 @@ import { X, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { CURRENCIES, type CurrencyCode } from "@/lib/utils/currency"
 
 interface CreateGroupModalProps {
   isOpen: boolean
   onClose: () => void
-  onCreate: (group: { name: string; emoji: string; members: string[] }) => void
+  onCreate: (group: { name: string; emoji: string; members: string[]; currency: CurrencyCode }) => void
 }
 
 const groupEmojis = ["👨‍👩‍👧‍👦", "🏠", "✈️", "🍕", "🎉", "⚽", "🏢", "🎓", "🏖️", "🎿", "🚗", "💼"]
@@ -18,6 +19,7 @@ const groupEmojis = ["👨‍👩‍👧‍👦", "🏠", "✈️", "🍕", "�
 export function CreateGroupModal({ isOpen, onClose, onCreate }: CreateGroupModalProps) {
   const [name, setName] = useState("")
   const [emoji, setEmoji] = useState("👨‍👩‍👧‍👦")
+  const [currency, setCurrency] = useState<CurrencyCode>("USD")
   const [members, setMembers] = useState<string[]>(["Tú"])
   const [newMember, setNewMember] = useState("")
 
@@ -36,9 +38,10 @@ export function CreateGroupModal({ isOpen, onClose, onCreate }: CreateGroupModal
 
   const handleCreate = () => {
     if (name.trim() && members.length > 0) {
-      onCreate({ name: name.trim(), emoji, members })
+      onCreate({ name: name.trim(), emoji, members, currency })
       setName("")
       setEmoji("👨‍👩‍👧‍👦")
+      setCurrency("USD")
       setMembers(["Tú"])
       onClose()
     }
@@ -101,6 +104,26 @@ export function CreateGroupModal({ isOpen, onClose, onCreate }: CreateGroupModal
                     onChange={(e) => setName(e.target.value)}
                     className="h-12 rounded-xl border-border/50 bg-muted/30"
                   />
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground mb-2 block">Moneda</label>
+                  <div className="flex gap-2">
+                    {(Object.keys(CURRENCIES) as CurrencyCode[]).map((code) => (
+                      <motion.button
+                        key={code}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => setCurrency(code)}
+                        className={`flex-1 h-11 rounded-xl flex items-center justify-center gap-2 transition-all ${currency === code
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted/50 text-muted-foreground hover:bg-muted"
+                          }`}
+                      >
+                        <span className="text-lg">{CURRENCIES[code].symbol}</span>
+                        <span className="text-sm font-medium">{code}</span>
+                      </motion.button>
+                    ))}
+                  </div>
                 </div>
 
                 <div>

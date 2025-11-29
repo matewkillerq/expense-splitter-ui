@@ -20,6 +20,7 @@ import { groupService, type Group } from "@/lib/services/group.service"
 import { expenseService } from "@/lib/services/expense.service"
 import { userService } from "@/lib/services/user.service"
 import { createClient } from "@/lib/supabase/client"
+import { type CurrencyCode } from "@/lib/utils/currency"
 
 export default function ExpenseSplitter() {
   const [groups, setGroups] = useState<Group[]>([])
@@ -221,7 +222,7 @@ export default function ExpenseSplitter() {
     return result
   }, [currentGroup])
 
-  const handleCreateGroup = async (groupData: { name: string; emoji: string; members: string[] }) => {
+  const handleCreateGroup = async (groupData: { name: string; emoji: string; members: string[]; currency: CurrencyCode }) => {
     if (!currentUser) return
 
     const members = Array.from(new Set([
@@ -235,6 +236,7 @@ export default function ExpenseSplitter() {
       name: groupData.name,
       emoji: groupData.emoji,
       members,
+      currency: groupData.currency,
     })
 
     if (!error && data) {
@@ -351,10 +353,10 @@ export default function ExpenseSplitter() {
     }
   }
 
-  const handleUpdateGroup = async (name: string, emoji: string) => {
+  const handleUpdateGroup = async (name: string, emoji: string, currency: CurrencyCode) => {
     if (!currentGroup) return
 
-    const { error } = await groupService.updateGroup(currentGroup.id, { name, emoji })
+    const { error } = await groupService.updateGroup(currentGroup.id, { name, emoji, currency })
     if (!error) {
       await loadData()
     }
@@ -602,6 +604,7 @@ export default function ExpenseSplitter() {
           members={formattedMembers}
           groupName={currentGroup.name}
           groupEmoji={currentGroup.emoji}
+          groupCurrency={currentGroup.currency}
           totalExpenses={currentGroup.expenses.reduce((sum, expense) => sum + expense.amount, 0)}
           onAddMember={handleAddMember}
           onRemoveMember={handleRemoveMember}

@@ -6,6 +6,7 @@ import { X, Plus, Trash2, Users, AlertTriangle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { UserAvatar } from "@/components/user-avatar"
+import { CURRENCIES, type CurrencyCode } from "@/lib/utils/currency"
 
 interface ManageGroupModalProps {
   isOpen: boolean
@@ -13,10 +14,11 @@ interface ManageGroupModalProps {
   members: { id: string; name: string; avatarUrl?: string | null }[]
   groupName: string
   groupEmoji: string
+  groupCurrency: CurrencyCode
   totalExpenses: number
   onAddMember: (name: string) => void
   onRemoveMember: (id: string) => void
-  onUpdateGroup: (name: string, emoji: string) => void
+  onUpdateGroup: (name: string, emoji: string, currency: CurrencyCode) => void
   onDeleteGroup?: () => void
 }
 
@@ -28,6 +30,7 @@ export function ManageGroupModal({
   members,
   groupName,
   groupEmoji,
+  groupCurrency,
   totalExpenses,
   onAddMember,
   onRemoveMember,
@@ -38,6 +41,7 @@ export function ManageGroupModal({
   const [editingGroup, setEditingGroup] = useState(false)
   const [tempGroupName, setTempGroupName] = useState(groupName)
   const [tempGroupEmoji, setTempGroupEmoji] = useState(groupEmoji)
+  const [tempGroupCurrency, setTempGroupCurrency] = useState<CurrencyCode>(groupCurrency)
   const [confirmDelete, setConfirmDelete] = useState(false)
 
   const handleAddMember = () => {
@@ -49,7 +53,7 @@ export function ManageGroupModal({
 
   const handleGuardarGroup = () => {
     if (tempGroupName.trim()) {
-      onUpdateGroup(tempGroupName.trim(), tempGroupEmoji)
+      onUpdateGroup(tempGroupName.trim(), tempGroupEmoji, tempGroupCurrency)
       setEditingGroup(false)
     }
   }
@@ -113,6 +117,25 @@ export function ManageGroupModal({
                       className="h-12 rounded-xl border-border/50 bg-card"
                       placeholder="Nombre del grupo"
                     />
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-muted-foreground">Moneda</label>
+                      <div className="flex gap-2">
+                        {(Object.keys(CURRENCIES) as CurrencyCode[]).map((code) => (
+                          <motion.button
+                            key={code}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => setTempGroupCurrency(code)}
+                            className={`flex-1 h-10 rounded-xl flex items-center justify-center gap-2 transition-all ${tempGroupCurrency === code
+                                ? "bg-primary text-primary-foreground"
+                                : "bg-muted/50 text-muted-foreground hover:bg-muted"
+                              }`}
+                          >
+                            <span className="text-lg">{CURRENCIES[code].symbol}</span>
+                            <span className="text-sm font-medium">{code}</span>
+                          </motion.button>
+                        ))}
+                      </div>
+                    </div>
                     <div className="flex gap-2">
                       <Button onClick={handleGuardarGroup} className="flex-1 h-10 rounded-xl">
                         Guardar
@@ -131,6 +154,7 @@ export function ManageGroupModal({
                     onClick={() => {
                       setTempGroupName(groupName)
                       setTempGroupEmoji(groupEmoji)
+                      setTempGroupCurrency(groupCurrency)
                       setEditingGroup(true)
                     }}
                     className="w-full flex items-center gap-3 text-left"

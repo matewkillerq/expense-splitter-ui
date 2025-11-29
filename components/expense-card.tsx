@@ -95,7 +95,11 @@ export function ExpenseCard({ title, amount, paidBy, participants, date, index, 
             </p>
           </div>
           <div className="text-right shrink-0">
-            <p className="font-bold text-xl text-foreground tabular-nums">${amount.toFixed(2)}</p>
+            <p className="font-bold text-xl text-foreground tabular-nums">
+              <span className="align-top text-sm mr-0.5">$</span>
+              <span className="mr-0.5">{Number(Math.floor(amount)).toLocaleString('en-US', { useGrouping: true }).replace(/,/g, '.')}</span>
+              <span className="align-super text-xs">{(amount % 1).toFixed(2).slice(2)}</span>
+            </p>
             <p className="text-xs text-muted-foreground mt-0.5">{formatDate(date)}</p>
           </div>
         </div>

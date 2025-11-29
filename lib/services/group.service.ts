@@ -1,9 +1,11 @@
 import { createClient } from '@/lib/supabase/client'
+import type { CurrencyCode } from '@/lib/utils/currency'
 
 export interface Group {
     id: string
     name: string
     emoji: string
+    currency: CurrencyCode
     members: string[] // usernames
     memberDetails: { username: string; avatarUrl: string | null }[]
     expenses: Expense[]
@@ -106,6 +108,7 @@ export const groupService = {
                         id: group.id,
                         name: group.name,
                         emoji: group.emoji,
+                        currency: (group.currency || 'USD') as CurrencyCode,
                         members,
                         memberDetails,
                         expenses: expensesWithDetails,
@@ -129,7 +132,7 @@ export const groupService = {
      */
     async createGroup(
         userId: string,
-        data: { name: string; emoji: string; members: string[] }
+        data: { name: string; emoji: string; members: string[]; currency?: CurrencyCode }
     ): Promise<{ data: Group | null; error: string | null }> {
         try {
             const supabase = createClient()
@@ -140,6 +143,7 @@ export const groupService = {
                 .insert({
                     name: data.name,
                     emoji: data.emoji,
+                    currency: data.currency || 'USD',
                     created_by: userId,
                 })
                 .select()
@@ -173,8 +177,9 @@ export const groupService = {
                     id: group.id,
                     name: group.name,
                     emoji: group.emoji,
+                    currency: (group.currency || 'USD') as CurrencyCode,
                     members: usernames,
-                    memberDetails: usernames.map(u => ({ username: u, avatarUrl: null })), // Inicialmente sin avatar o null
+                    memberDetails: usernames.map(u => ({ username: u, avatarUrl: null })),
                     expenses: [],
                 },
                 error: null,
@@ -194,7 +199,7 @@ export const groupService = {
      */
     async updateGroup(
         groupId: string,
-        updates: { name?: string; emoji?: string }
+        updates: { name?: string; emoji?: string; currency?: CurrencyCode }
     ): Promise<{ error: string | null }> {
         try {
             const supabase = createClient()
