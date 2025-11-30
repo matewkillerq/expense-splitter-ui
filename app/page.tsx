@@ -86,62 +86,36 @@ export default function ExpenseSplitter() {
   }, [groupsLoading, expensesLoading, selectedGroupId])
 
   // Real-time updates for active group
-  useEffect(() => {
-    if (!selectedGroupId) return
-
-    const supabase = createClient()
-
-    const channel = supabase
-      .channel(`group-${selectedGroupId}`)
-      .on('postgres_changes',
-        { event: '*', schema: 'public', table: 'expenses', filter: `group_id=eq.${selectedGroupId}` },
-        async () => {
-          console.log('Realtime update: expenses changed')
-          await queryClient.invalidateQueries({ queryKey: ['groups', currentUser?.id] })
-          await queryClient.refetchQueries({ queryKey: ['groups', currentUser?.id] })
-        }
-      )
-      .on('postgres_changes',
-        { event: '*', schema: 'public', table: 'group_members', filter: `group_id=eq.${selectedGroupId}` },
-        async () => {
-          console.log('Realtime update: group members changed')
-          await queryClient.invalidateQueries({ queryKey: ['groups', currentUser?.id] })
-          await queryClient.refetchQueries({ queryKey: ['groups', currentUser?.id] })
-        }
-      )
-      .on('postgres_changes',
-        { event: '*', schema: 'public', table: 'groups', filter: `id=eq.${selectedGroupId}` },
-        async () => {
-          console.log('Realtime update: group details changed')
-          await queryClient.invalidateQueries({ queryKey: ['groups', currentUser?.id] })
-          await queryClient.refetchQueries({ queryKey: ['groups', currentUser?.id] })
-        }
-      )
-      .subscribe()
-
-    return () => {
-      supabase.removeChannel(channel)
-    }
-  }, [selectedGroupId, queryClient, currentUser?.id])
-
-  // Real-time updates for user (new groups/invites)
+  // Real-time updates for active group
   useEffect(() => {
     if (!currentUser) return
 
     const supabase = createClient()
 
     const channel = supabase
-      .channel(`user-${currentUser.username}`)
+      .channel(`user-data-${currentUser.id}`)
       .on('postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'group_members',
-          filter: `user_id=eq.${currentUser.id}`
-        },
+        { event: '*', schema: 'public', table: 'expenses' },
         async () => {
-          console.log('Realtime update: user added/removed from group')
-          await queryClient.invalidateQueries({ queryKey: ['groups', currentUser?.id] })
+          console.log('Realtime update: expenses changed')
+          await queryClient.invalidateQueries({ queryKey: ['groups', currentUser.id] })
+          await queryClient.refetchQueries({ queryKey: ['groups', currentUser.id] })
+        }
+      )
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'group_members' },
+        async () => {
+          console.log('Realtime update: group members changed')
+          await queryClient.invalidateQueries({ queryKey: ['groups', currentUser.id] })
+          await queryClient.refetchQueries({ queryKey: ['groups', currentUser.id] })
+        }
+      )
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'groups' },
+        async () => {
+          console.log('Realtime update: group details changed')
+          await queryClient.invalidateQueries({ queryKey: ['groups', currentUser.id] })
+          await queryClient.refetchQueries({ queryKey: ['groups', currentUser.id] })
         }
       )
       .subscribe()
@@ -149,7 +123,9 @@ export default function ExpenseSplitter() {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [currentUser, queryClient])
+  }, [queryClient, currentUser])
+
+
 
   useEffect(() => {
     if (!groupsLoading && !expensesLoading) {
