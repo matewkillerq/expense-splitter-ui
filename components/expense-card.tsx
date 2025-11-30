@@ -1,10 +1,10 @@
 "use client"
-import { motion, useMotionValue, useTransform, PanInfo } from "framer-motion"
+import { motion, useMotionValue, useTransform, PanInfo, animate } from "framer-motion"
 import { UserAvatar } from "@/components/user-avatar"
 import { FormattedAmount } from "@/components/formatted-amount"
 import { Trash2 } from "lucide-react"
 import { formatDate } from "@/lib/utils"
-import { useState } from "react"
+import { useState, useRef } from "react"
 
 interface ExpenseCardProps {
   title: string
@@ -19,12 +19,13 @@ interface ExpenseCardProps {
 }
 
 export function ExpenseCard({ title, amount, paidBy, participants, date, index, currency = 'USD', onDelete, currentUserId }: ExpenseCardProps) {
-  const [isOpen, setIsOpen] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
   const x = useMotionValue(0)
+  const deleteButtonWidth = 80
 
   // Transformar la opacidad del icono de basura basado en la posición x
-  const iconOpacity = useTransform(x, [0, -40, -80], [0, 0.5, 1])
-  const iconScale = useTransform(x, [0, -80], [0.5, 1])
+  const iconOpacity = useTransform(x, [-deleteButtonWidth, 0], [1, 0])
+  const iconScale = useTransform(x, [-deleteButtonWidth, 0], [1, 0.8])
 
   const paidByText =
     paidBy.length === 1
@@ -40,66 +41,89 @@ export function ExpenseCard({ title, amount, paidBy, participants, date, index, 
       : `$${amount.toFixed(2)} solo para ${participants[0].username}`)
     : `$${amountPerParticipant.toFixed(2)} cada uno`
 
-  const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-    const swipeThreshold = -80; // medium swipe opens delete button
-    const deleteThreshold = -140; // strong swipe deletes
-    const velocityThreshold = 800; // higher velocity for intentional delete
+  const handleDragEnd = (_: any, info: PanInfo) => {
+    const offset = info.offset.x
+    const velocity = info.velocity.x
 
-    const isFastSwipe = Math.abs(info.velocity.x) > velocityThreshold;
+    // Threshold for opening delete button
+    const openThreshold = -50
+    // Threshold for auto-delete (swipe far enough)
+    const deleteThreshold = -120
+    // Velocity threshold for quick swipe
+    const velocityThreshold = -500
 
-    if (info.offset.x < deleteThreshold || (isFastSwipe && info.offset.x < swipeThreshold)) {
-      // Strong swipe -> delete
-      onDelete?.();
-      setIsOpen(false);
-      x.set(0);
-    } else if (info.offset.x < swipeThreshold) {
-      // Medium swipe -> snap to -80 (open delete button)
-      setIsOpen(true);
-      x.set(-80);
+    if (offset < deleteThreshold || velocity < velocityThreshold) {
+      // Strong swipe or fast swipe -> delete
+      handleDelete()
+    } else if (offset < openThreshold) {
+      // Medium swipe -> snap to open position
+      animate(x, -deleteButtonWidth, {
+        type: "spring",
+        stiffness: 400,
+        damping: 30
+      })
     } else {
-      // No swipe or swipe right -> reset
-      setIsOpen(false);
-      x.set(0);
+      // Light swipe or swipe right -> close
+      animate(x, 0, {
+        type: "spring",
+        stiffness: 400,
+        damping: 30
+      })
     }
-  };
+  }
+
+  const handleDelete = () => {
+    if (isDeleting || !onDelete) return
+
+    setIsDeleting(true)
+
+    // Animate out to the left
+    animate(x, -400, {
+      type: "spring",
+      stiffness: 300,
+      damping: 25
+    }).then(() => {
+      onDelete()
+    })
+  }
+
+  const handleDeleteButtonClick = () => {
+    handleDelete()
+  }
 
   return (
-    <div className="relative group touch-pan-y mb-3">
-      {/* Fondo rojo con botón de eliminar */}
-      <div className="absolute inset-0 bg-destructive rounded-2xl flex items-center justify-end pr-6 overflow-hidden">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+      transition={{
+        opacity: { duration: 0.2 },
+        y: { type: "spring", stiffness: 300, damping: 25 },
+        height: { duration: 0.2 },
+        marginBottom: { duration: 0.2 }
+      }}
+      className="relative mb-3 overflow-hidden"
+    >
+      {/* Delete button background */}
+      <div className="absolute inset-0 bg-destructive rounded-2xl flex items-center justify-end pr-6">
         <motion.button
           style={{ opacity: iconOpacity, scale: iconScale }}
-          onClick={() => {
-            onDelete?.()
-            setIsOpen(false)
-          }}
-          className="flex items-center justify-center"
+          onClick={handleDeleteButtonClick}
+          className="flex items-center justify-center w-12 h-12"
           aria-label="Eliminar"
         >
           <Trash2 className="h-6 w-6 text-destructive-foreground" />
         </motion.button>
       </div>
 
+      {/* Card content */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{
-          opacity: 1,
-          y: 0,
-          x: isOpen ? -80 : 0
-        }}
         style={{ x }}
         drag="x"
-        dragConstraints={{ left: -160, right: 0 }}
-        dragElastic={{ right: 0, left: 0.1 }}
-        dragMomentum={false}
+        dragConstraints={{ left: -deleteButtonWidth, right: 0 }}
+        dragElastic={{ left: 0.1, right: 0 }}
         onDragEnd={handleDragEnd}
-        transition={{
-          type: "spring",
-          stiffness: 500,
-          damping: 30,
-          bounce: 0.2
-        }}
-        className="bg-card rounded-2xl p-5 shadow-sm border border-border/50 relative z-10"
+        className="bg-card rounded-2xl p-5 shadow-sm border border-border/50 relative cursor-grab active:cursor-grabbing touch-pan-y"
       >
         <div className="flex items-start justify-between gap-4">
           <div className="flex flex-col gap-0.5">
@@ -142,23 +166,18 @@ export function ExpenseCard({ title, amount, paidBy, participants, date, index, 
             {amountText}
           </span>
         </div>
-
-        {/* Botón de eliminar para Desktop (hover) - Solo visible si no es touch device idealmente, 
-            pero lo mantenemos oculto en mobile via media query si fuera necesario. 
-            Aquí usamos group-hover que funciona bien en desktop. */}
-        {onDelete && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation()
-              onDelete()
-            }}
-            className="absolute -top-2 -right-2 p-2 rounded-full bg-destructive text-destructive-foreground shadow-lg opacity-0 group-hover:opacity-100 transition-opacity hidden md:block"
-            aria-label="Eliminar gasto"
-          >
-            <Trash2 className="h-4 w-4" />
-          </button>
-        )}
       </motion.div>
-    </div>
+
+      {/* Desktop hover delete button */}
+      {onDelete && (
+        <button
+          onClick={handleDelete}
+          className="absolute -top-2 -right-2 p-2 rounded-full bg-destructive text-destructive-foreground shadow-lg opacity-0 hover:opacity-100 transition-opacity hidden md:block z-20"
+          aria-label="Eliminar gasto"
+        >
+          <Trash2 className="h-4 w-4" />
+        </button>
+      )}
+    </motion.div>
   )
 }

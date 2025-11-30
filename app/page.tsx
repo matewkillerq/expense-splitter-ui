@@ -64,18 +64,24 @@ export default function ExpenseSplitter() {
   }, [router])
 
   // React Query hooks
-  const { data: groupsData, isLoading: groupsLoading } = useGroups(currentUser?.id ?? null)
+  const { data: groupsData, isLoading: groupsLoading, error: groupsError } = useGroups(currentUser?.id ?? null)
   const { data: expensesData, isLoading: expensesLoading } = useExpenses(selectedGroupId)
 
   // Sync groups state with query data
   useEffect(() => {
-    if (groupsData) {
+    if (groupsData !== undefined) {
       setGroups(groupsData)
+      // Auto-select first group if none selected
       if (groupsData.length > 0 && !selectedGroupId) {
         setSelectedGroupId(groupsData[0].id)
       }
     }
-  }, [groupsData, selectedGroupId])
+  }, [groupsData])
+
+  // Set loading state
+  useEffect(() => {
+    setIsLoading(groupsLoading || (!!selectedGroupId && expensesLoading))
+  }, [groupsLoading, expensesLoading, selectedGroupId])
 
   // Real-time updates for active group
   useEffect(() => {
