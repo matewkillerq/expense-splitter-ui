@@ -30,6 +30,20 @@ export function SettleModal({ isOpen, onClose, settlements, simplifiedSettlement
   const activeSettlements = useSimplified ? simplifiedSettlements : settlements
   const savedTransactions = settlements.length - simplifiedSettlements.length
 
+  const [processingSettlement, setProcessingSettlement] = useState<string | null>(null)
+
+  const handleSettleClick = async (settlement: Settlement) => {
+    const id = `${settlement.from}-${settlement.to}-${settlement.amount}`
+    setProcessingSettlement(id)
+    try {
+      await onSettle(settlement)
+    } catch (error) {
+      console.error("Error settling:", error)
+    } finally {
+      setProcessingSettlement(null)
+    }
+  }
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -199,11 +213,12 @@ export function SettleModal({ isOpen, onClose, settlements, simplifiedSettlement
                           </div>
                         </div>
                         <Button
-                          onClick={() => onSettle(settlement)}
+                          onClick={() => handleSettleClick(settlement)}
                           size="sm"
+                          disabled={processingSettlement === `${settlement.from}-${settlement.to}-${settlement.amount}`}
                           className="rounded-xl bg-accent hover:bg-accent/90 text-accent-foreground"
                         >
-                          Saldar
+                          {processingSettlement === `${settlement.from}-${settlement.to}-${settlement.amount}` ? "..." : "Saldar"}
                         </Button>
                       </motion.div>
                     ))}

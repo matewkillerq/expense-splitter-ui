@@ -36,14 +36,23 @@ export function CreateGroupModal({ isOpen, onClose, onCreate }: CreateGroupModal
     }
   }
 
-  const handleCreate = () => {
+  const [isLoading, setIsLoading] = useState(false)
+
+  const handleCreate = async () => {
     if (name.trim() && members.length > 0) {
-      onCreate({ name: name.trim(), emoji, members, currency })
-      setName("")
-      setEmoji("👨‍👩‍👧‍👦")
-      setCurrency("USD")
-      setMembers(["Tú"])
-      onClose()
+      setIsLoading(true)
+      try {
+        await onCreate({ name: name.trim(), emoji, members, currency })
+        setName("")
+        setEmoji("👨‍👩‍👧‍👦")
+        setCurrency("USD")
+        setMembers(["Tú"])
+        onClose()
+      } catch (error) {
+        console.error("Error creating group:", error)
+      } finally {
+        setIsLoading(false)
+      }
     }
   }
 
@@ -115,8 +124,8 @@ export function CreateGroupModal({ isOpen, onClose, onCreate }: CreateGroupModal
                         whileTap={{ scale: 0.95 }}
                         onClick={() => setCurrency(code)}
                         className={`flex-1 h-11 rounded-xl flex items-center justify-center gap-2 transition-all ${currency === code
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-muted/50 text-muted-foreground hover:bg-muted"
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted/50 text-muted-foreground hover:bg-muted"
                           }`}
                       >
                         <span className="text-lg">{CURRENCIES[code].symbol}</span>
@@ -175,10 +184,10 @@ export function CreateGroupModal({ isOpen, onClose, onCreate }: CreateGroupModal
 
               <Button
                 onClick={handleCreate}
-                disabled={!name.trim() || members.length === 0}
+                disabled={!name.trim() || members.length === 0 || isLoading}
                 className="w-full h-12 font-semibold rounded-xl bg-foreground text-background hover:bg-foreground/90 disabled:opacity-50"
               >
-                Crear Grupo
+                {isLoading ? "Creando..." : "Crear Grupo"}
               </Button>
             </div>
           </motion.div>

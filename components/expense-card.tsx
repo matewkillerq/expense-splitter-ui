@@ -41,25 +41,27 @@ export function ExpenseCard({ title, amount, paidBy, participants, date, index, 
     : `$${amountPerParticipant.toFixed(2)} cada uno`
 
   const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-    const swipeThreshold = -80 // Must swipe at least 80px to trigger
-    const deleteThreshold = -140 // Must swipe 140px to delete directly
-    const velocityThreshold = 500 // Fast swipe velocity
+    const swipeThreshold = -80; // medium swipe opens delete button
+    const deleteThreshold = -140; // strong swipe deletes
+    const velocityThreshold = 800; // higher velocity for intentional delete
 
-    // Check if it's a fast swipe (velocity-based)
-    const isFastSwipe = Math.abs(info.velocity.x) > velocityThreshold
+    const isFastSwipe = Math.abs(info.velocity.x) > velocityThreshold;
 
     if (info.offset.x < deleteThreshold || (isFastSwipe && info.offset.x < swipeThreshold)) {
-      // Fast swipe or long swipe -> Delete
-      onDelete?.()
-      setIsOpen(false)
+      // Strong swipe -> delete
+      onDelete?.();
+      setIsOpen(false);
+      x.set(0);
     } else if (info.offset.x < swipeThreshold) {
-      // Medium swipe -> Open delete button
-      setIsOpen(true)
+      // Medium swipe -> snap to -80 (open delete button)
+      setIsOpen(true);
+      x.set(-80);
     } else {
-      // Short swipe or swipe right -> Close
-      setIsOpen(false)
+      // No swipe or swipe right -> reset
+      setIsOpen(false);
+      x.set(0);
     }
-  }
+  };
 
   return (
     <div className="relative group touch-pan-y mb-3">
@@ -88,13 +90,14 @@ export function ExpenseCard({ title, amount, paidBy, participants, date, index, 
         style={{ x }}
         drag="x"
         dragConstraints={{ left: -160, right: 0 }}
-        dragElastic={{ right: 0, left: 0.2 }}
+        dragElastic={{ right: 0, left: 0.1 }}
         dragMomentum={false}
         onDragEnd={handleDragEnd}
         transition={{
           type: "spring",
           stiffness: 500,
-          damping: 35
+          damping: 30,
+          bounce: 0.2
         }}
         className="bg-card rounded-2xl p-5 shadow-sm border border-border/50 relative z-10"
       >

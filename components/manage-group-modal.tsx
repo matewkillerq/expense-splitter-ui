@@ -58,16 +58,46 @@ export function ManageGroupModal({
   }, [isOpen, groupName, groupEmoji, groupCurrency, groupBank])
   const [confirmDelete, setConfirmDelete] = useState(false)
 
-  const handleAddMember = () => {
+  const [isUpdating, setIsUpdating] = useState(false)
+  const [isAddingMember, setIsAddingMember] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+
+  const handleAddMember = async () => {
     if (newMemberName.trim()) {
-      onAddMember(newMemberName.trim())
-      setNewMemberName("")
+      setIsAddingMember(true)
+      try {
+        await onAddMember(newMemberName.trim())
+        setNewMemberName("")
+      } catch (error) {
+        console.error("Error adding member:", error)
+      } finally {
+        setIsAddingMember(false)
+      }
     }
   }
 
-  const handleGuardarGroup = () => {
+  const handleGuardarGroup = async () => {
     if (tempGroupName.trim()) {
-      onUpdateGroup(tempGroupName.trim(), tempGroupEmoji, tempGroupCurrency, tempGroupBank)
+      setIsUpdating(true)
+      try {
+        await onUpdateGroup(tempGroupName.trim(), tempGroupEmoji, tempGroupCurrency, tempGroupBank)
+      } catch (error) {
+        console.error("Error updating group:", error)
+      } finally {
+        setIsUpdating(false)
+      }
+    }
+  }
+
+  const handleDelete = async () => {
+    if (onDeleteGroup) {
+      setIsDeleting(true)
+      try {
+        await onDeleteGroup()
+      } catch (error) {
+        console.error("Error deleting group:", error)
+        setIsDeleting(false)
+      }
     }
   }
 
@@ -239,13 +269,14 @@ export function ManageGroupModal({
                 onClick={handleGuardarGroup}
                 className="w-full h-12 rounded-xl text-lg font-semibold"
                 disabled={
-                  tempGroupName === groupName &&
-                  tempGroupEmoji === groupEmoji &&
-                  tempGroupCurrency === groupCurrency &&
-                  tempGroupBank === groupBank
+                  (tempGroupName === groupName &&
+                    tempGroupEmoji === groupEmoji &&
+                    tempGroupCurrency === groupCurrency &&
+                    tempGroupBank === groupBank) ||
+                  isUpdating
                 }
               >
-                Guardar Cambios
+                {isUpdating ? "Guardando..." : "Guardar Cambios"}
               </Button>
 
               {/* Members Section */}
@@ -263,9 +294,18 @@ export function ManageGroupModal({
                   <Button
                     onClick={handleAddMember}
                     size="icon"
+                    disabled={!newMemberName.trim() || isAddingMember}
                     className="h-12 w-12 rounded-xl bg-foreground text-background hover:bg-foreground/90"
                   >
-                    <Plus className="h-5 w-5" />
+                    {isAddingMember ? (
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                        className="w-4 h-4 border-2 border-background border-t-transparent rounded-full"
+                      />
+                    ) : (
+                      <Plus className="h-5 w-5" />
+                    )}
                   </Button>
                 </div>
 
@@ -325,14 +365,16 @@ export function ManageGroupModal({
                       <div className="flex gap-2">
                         <Button
                           variant="destructive"
-                          onClick={onDeleteGroup}
+                          onClick={handleDelete}
+                          disabled={isDeleting}
                           className="flex-1"
                         >
-                          Yes, delete
+                          {isDeleting ? "Deleting..." : "Yes, delete"}
                         </Button>
                         <Button
                           variant="outline"
                           onClick={() => setConfirmDelete(false)}
+                          disabled={isDeleting}
                           className="flex-1"
                         >
                           Cancel

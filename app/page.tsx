@@ -23,21 +23,24 @@ import { createClient } from "@/lib/supabase/client"
 import { type CurrencyCode } from "@/lib/utils/currency"
 import { type BankCode, getBankAppLink, BANKS } from "@/lib/utils/bank"
 import Image from "next/image"
+import { useGroups } from "@/hooks/useGroups"
+import { useExpenses } from "@/hooks/useExpenses"
+import { useQueryClient } from "@/hooks/useQueryClient"
+import { useMutation } from "@tanstack/react-query"
 
 export default function ExpenseSplitter() {
-  const [groups, setGroups] = useState<Group[]>([])
-  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null)
   const [currentUser, setCurrentUser] = useState<User | null>(null)
-
+  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null)
   const [isAddExpenseOpen, setIsAddExpenseOpen] = useState(false)
   const [isManageGroupOpen, setIsManageGroupOpen] = useState(false)
   const [isSettleOpen, setIsSettleOpen] = useState(false)
   const [isCreateGroupOpen, setIsCreateGroupOpen] = useState(false)
   const [isProfileOpen, setIsProfileOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
-  // isRefreshing removed as it is no longer needed
+  const [groups, setGroups] = useState<Group[]>([])
 
   const router = useRouter()
+  const queryClient = useQueryClient()
 
   // Test Supabase connection on mount
   useEffect(() => {
@@ -48,25 +51,31 @@ export default function ExpenseSplitter() {
     }
   }, [])
 
-  const loadData = useCallback(async () => {
-    const { user } = await authService.getCurrentUser()
-    if (!user) {
-      router.push("/auth/login")
-      return
-    }
-    setCurrentUser(user)
+  // Load current user
+  useEffect(() => {
+    (async () => {
+      const { user } = await authService.getCurrentUser()
+      if (!user) {
+        router.push("/auth/login")
+        return
+      }
+      setCurrentUser(user)
+    })()
+  }, [router])
 
-    const { data: userGroups } = await groupService.getUserGroups(user.id)
-    if (userGroups) {
-      setGroups(userGroups)
+  // React Query hooks
+  const { data: groupsData, isLoading: groupsLoading } = useGroups(currentUser?.id ?? null)
+  const { data: expensesData, isLoading: expensesLoading } = useExpenses(selectedGroupId)
 
-      if (userGroups.length > 0 && !selectedGroupId) {
-        setSelectedGroupId(userGroups[0].id)
-      } else if (userGroups.length === 0) {
-        setSelectedGroupId(null)
+  // Sync groups state with query data
+  useEffect(() => {
+    if (groupsData) {
+      setGroups(groupsData)
+      if (groupsData.length > 0 && !selectedGroupId) {
+        setSelectedGroupId(groupsData[0].id)
       }
     }
-  }, [router, selectedGroupId])
+  }, [groupsData, selectedGroupId])
 
   // Real-time updates for active group
   useEffect(() => {
@@ -80,21 +89,21 @@ export default function ExpenseSplitter() {
         { event: '*', schema: 'public', table: 'expenses', filter: `group_id=eq.${selectedGroupId}` },
         () => {
           console.log('Realtime update: expenses changed')
-          loadData()
+          queryClient.invalidateQueries({ queryKey: ['expenses', selectedGroupId] })
         }
       )
       .on('postgres_changes',
         { event: '*', schema: 'public', table: 'group_members', filter: `group_id=eq.${selectedGroupId}` },
         () => {
           console.log('Realtime update: group members changed')
-          loadData()
+          queryClient.invalidateQueries({ queryKey: ['groups', currentUser?.id] })
         }
       )
       .on('postgres_changes',
         { event: '*', schema: 'public', table: 'groups', filter: `id=eq.${selectedGroupId}` },
         () => {
           console.log('Realtime update: group details changed')
-          loadData()
+          queryClient.invalidateQueries({ queryKey: ['groups', currentUser?.id] })
         }
       )
       .subscribe()
@@ -102,7 +111,7 @@ export default function ExpenseSplitter() {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [selectedGroupId, loadData])
+  }, [selectedGroupId, queryClient, currentUser?.id])
 
   // Real-time updates for user (new groups/invites)
   useEffect(() => {
@@ -117,11 +126,11 @@ export default function ExpenseSplitter() {
           event: '*',
           schema: 'public',
           table: 'group_members',
-          filter: `username=eq.${currentUser.username}`
+          filter: `user_id=eq.${currentUser.id}`
         },
-        () => {
+        async () => {
           console.log('Realtime update: user added/removed from group')
-          loadData()
+          await queryClient.invalidateQueries({ queryKey: ['groups', currentUser?.id] })
         }
       )
       .subscribe()
@@ -129,13 +138,13 @@ export default function ExpenseSplitter() {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [currentUser, loadData])
+  }, [currentUser, queryClient])
 
   useEffect(() => {
-    loadData().then(() => setIsLoading(false))
-  }, [loadData])
-
-  // handleRefresh removed as it is no longer needed
+    if (!groupsLoading && !expensesLoading) {
+      setIsLoading(false)
+    }
+  }, [groupsLoading, expensesLoading])
 
   const currentGroup = groups.find((g) => g.id === selectedGroupId)
 
@@ -180,11 +189,11 @@ export default function ExpenseSplitter() {
       const sharePerParticipant = amount / splitCount
       const sharePerPayer = amount / payerCount
 
-      expense.paidBy.forEach((payer) => {
+      expense.paidBy.forEach((payer: string) => {
         balances[payer] = (balances[payer] || 0) + sharePerPayer
       })
 
-      expense.participants.forEach((participant) => {
+      expense.participants.forEach((participant: string) => {
         balances[participant] = (balances[participant] || 0) - sharePerParticipant
       })
     })
@@ -242,7 +251,7 @@ export default function ExpenseSplitter() {
     })
 
     if (!error && data) {
-      await loadData()
+      queryClient.invalidateQueries({ queryKey: ['groups', currentUser.id] })
       setSelectedGroupId(data.id)
     }
   }
@@ -286,7 +295,7 @@ export default function ExpenseSplitter() {
     )
 
     if (!error) {
-      await loadData()
+      queryClient.invalidateQueries({ queryKey: ['expenses', currentGroup.id] })
     } else {
       // Revert on error
       setGroups(previousGroups)
@@ -313,9 +322,9 @@ export default function ExpenseSplitter() {
       // Rollback on error
       setGroups(previousGroups)
       console.error("Error deleting expense:", error)
+    } else {
+      queryClient.invalidateQueries({ queryKey: ['expenses', currentGroup.id] })
     }
-    // No need to await loadData() explicitly as Realtime will sync eventually, 
-    // but we can call it silently to ensure consistency without blocking UI.
   }
 
   // ... (handleSettle)
@@ -358,7 +367,7 @@ export default function ExpenseSplitter() {
       setGroups(previousGroups)
       console.error("Error creating settlement:", error)
     } else {
-      // Realtime will replace the temp expense with the real one
+      queryClient.invalidateQueries({ queryKey: ['expenses', currentGroup.id] })
     }
   }
 
@@ -369,7 +378,7 @@ export default function ExpenseSplitter() {
     if (error) {
       alert(error)
     } else {
-      await loadData()
+      queryClient.invalidateQueries({ queryKey: ['groups', currentUser?.id] })
     }
   }
 
@@ -378,7 +387,7 @@ export default function ExpenseSplitter() {
 
     const { error } = await groupService.removeMember(currentGroup.id, username)
     if (!error) {
-      await loadData()
+      queryClient.invalidateQueries({ queryKey: ['groups', currentUser?.id] })
     }
   }
 
@@ -400,8 +409,7 @@ export default function ExpenseSplitter() {
     const { error } = await groupService.updateGroup(currentGroup.id, { name, emoji, currency, preferred_bank: bank })
 
     if (!error) {
-      // Background sync
-      loadData()
+      queryClient.invalidateQueries({ queryKey: ['groups', currentUser?.id] })
     } else {
       console.error("Error updating group:", error)
       // Revert on error
@@ -422,7 +430,7 @@ export default function ExpenseSplitter() {
     const { error } = await groupService.deleteGroup(currentGroup.id)
     if (!error) {
       setSelectedGroupId(null)
-      await loadData()
+      queryClient.invalidateQueries({ queryKey: ['groups', currentUser?.id] })
       setIsManageGroupOpen(false)
     }
   }
@@ -436,7 +444,11 @@ export default function ExpenseSplitter() {
     })
 
     if (!error) {
-      await loadData()
+      // Refresh user data if needed, or just rely on local state update if we had one
+      // For now, we might want to reload the page or invalidate user query if we had one
+      // But we are using authService.getCurrentUser() in useEffect, so maybe we should invalidate that?
+      // Or just update local state:
+      setCurrentUser(prev => prev ? { ...prev, displayName: name, avatarUrl: avatarUrl || prev.avatarUrl } : null)
     }
   }
 
@@ -624,7 +636,7 @@ export default function ExpenseSplitter() {
                   title={expense.title}
                   amount={expense.amount}
                   paidBy={expense.paidBy}
-                  participants={expense.participants.map(p => {
+                  participants={expense.participants.map((p: string) => {
                     const details = currentGroup.memberDetails?.find(d => d.username === p)
                     return {
                       username: p,

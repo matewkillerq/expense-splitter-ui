@@ -41,19 +41,27 @@ export function AddExpenseModal({ isOpen, onClose, onAdd, members, currentUserId
     setSelectedParticipants((prev) => (prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]))
   }
 
-  const handleSubmit = () => {
+  const [isLoading, setIsLoading] = useState(false)
+
+  const handleSubmit = async () => {
     if (!amount || selectedParticipants.length === 0 || paidBy.length === 0) return
 
-    onAdd({
-      title: title.trim() || "Gasto",
-      amount: Number.parseFloat(amount),
-      paidBy: paidBy, // Send IDs (usernames)
-      participants: selectedParticipants, // Send IDs (usernames)
-    })
-
-    setTitle("")
-    setAmount("")
-    onClose()
+    setIsLoading(true)
+    try {
+      await onAdd({
+        title: title.trim() || "Gasto",
+        amount: Number.parseFloat(amount),
+        paidBy: paidBy, // Send IDs (usernames)
+        participants: selectedParticipants, // Send IDs (usernames)
+      })
+      setTitle("")
+      setAmount("")
+      onClose()
+    } catch (error) {
+      console.error("Error adding expense:", error)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -166,10 +174,10 @@ export function AddExpenseModal({ isOpen, onClose, onAdd, members, currentUserId
 
               <Button
                 onClick={handleSubmit}
-                disabled={!amount || selectedParticipants.length === 0 || paidBy.length === 0}
+                disabled={!amount || selectedParticipants.length === 0 || paidBy.length === 0 || isLoading}
                 className="w-full h-14 text-lg font-semibold rounded-xl bg-foreground text-background hover:bg-foreground/90 transition-all disabled:opacity-50"
               >
-                Agregar Gasto
+                {isLoading ? "Agregando..." : "Agregar Gasto"}
               </Button>
             </div>
           </motion.div>
