@@ -14,6 +14,7 @@ import { SettleModal } from "@/components/settle-modal"
 import { GroupSelector } from "@/components/group-selector"
 import { CreateGroupModal } from "@/components/create-group-modal"
 import { ProfileModal } from "@/components/profile-modal"
+import { UndoToast } from "@/components/undo-toast"
 import { useRouter } from "next/navigation"
 import { authService, type User } from "@/lib/services/auth.service"
 import { groupService, type Group } from "@/lib/services/group.service"
@@ -38,6 +39,7 @@ export default function ExpenseSplitter() {
   const [isProfileOpen, setIsProfileOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [groups, setGroups] = useState<Group[]>([])
+  const [undoData, setUndoData] = useState<{ expense: any; groupId: string } | null>(null)
 
   const router = useRouter()
   const queryClient = useQueryClient()
@@ -314,6 +316,10 @@ export default function ExpenseSplitter() {
   const handleDeleteExpense = async (expenseId: string) => {
     if (!currentGroup) return
 
+    // Find the expense to delete
+    const expenseToDelete = currentGroup.expenses.find(e => e.id === expenseId)
+    if (!expenseToDelete) return
+
     // Optimistic update
     const previousGroups = [...groups]
     setGroups(groups.map(g => {
@@ -326,14 +332,57 @@ export default function ExpenseSplitter() {
       return g
     }))
 
+    // Show undo toast
+    setUndoData({ expense: expenseToDelete, groupId: currentGroup.id })
+
+    // Delete from DB
     const { error } = await expenseService.deleteExpense(expenseId)
     if (error) {
       // Rollback on error
       setGroups(previousGroups)
+      setUndoData(null)
       console.error("Error deleting expense:", error)
     } else {
-      queryClient.invalidateQueries({ queryKey: ['expenses', currentGroup.id] })
+      // Invalidate queries to trigger real-time update for other users
+      await queryClient.invalidateQueries({ queryKey: ['groups', currentUser?.id] })
     }
+  }
+
+  const handleUndoDelete = async () => {
+    if (!undoData) return
+
+    const { expense, groupId } = undoData
+
+    // Re-add expense optimistically
+    setGroups(groups.map(g => {
+      if (g.id === groupId) {
+        return {
+          ...g,
+          expenses: [...g.expenses, expense]
+        }
+      }
+      return g
+    }))
+
+    // Re-create in DB
+    const { error } = await expenseService.createExpense(
+      groupId,
+      currentUser!.id,
+      {
+        title: expense.title,
+        amount: expense.amount,
+        paidBy: expense.paidBy,
+        participants: expense.participants
+      }
+    )
+
+    if (error) {
+      console.error("Error undoing delete:", error)
+    } else {
+      await queryClient.invalidateQueries({ queryKey: ['groups', currentUser?.id] })
+    }
+
+    setUndoData(null)
   }
 
   // ... (handleSettle)
@@ -719,6 +768,16 @@ export default function ExpenseSplitter() {
           }}
           onUpdateProfile={handleUpdateProfile}
         />
+
+        <AnimatePresence>
+          {undoData && (
+            <UndoToast
+              message={`Gasto "${undoData.expense.title}" eliminado`}
+              onUndo={handleUndoDelete}
+              onDismiss={() => setUndoData(null)}
+            />
+          )}
+        </AnimatePresence>
       </div>
     </div>
   )

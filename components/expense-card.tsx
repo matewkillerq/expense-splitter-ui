@@ -47,13 +47,12 @@ export function ExpenseCard({ title, amount, paidBy, participants, date, index, 
 
     // Threshold for opening delete button
     const openThreshold = -60
-    // Threshold for auto-delete (swipe far enough) - increased to prevent accidental deletes
-    const deleteThreshold = -200
-    // Velocity threshold for quick swipe - increased for more intentional swipes
-    const velocityThreshold = -800
+    // Threshold for auto-delete - must swipe all the way (very strict)
+    const deleteThreshold = -250  // Much further, must be intentional
 
-    if (offset < deleteThreshold || velocity < velocityThreshold) {
-      // Strong swipe or very fast swipe -> delete
+    // Only delete if swiped far enough - NO velocity-based delete
+    if (offset < deleteThreshold) {
+      // Must swipe all the way to delete
       handleDelete()
     } else if (offset < openThreshold) {
       // Medium swipe -> snap to open position
