@@ -46,14 +46,14 @@ export function ExpenseCard({ title, amount, paidBy, participants, date, index, 
     const velocity = info.velocity.x
 
     // Threshold for opening delete button
-    const openThreshold = -50
-    // Threshold for auto-delete (swipe far enough)
-    const deleteThreshold = -120
-    // Velocity threshold for quick swipe
-    const velocityThreshold = -500
+    const openThreshold = -60
+    // Threshold for auto-delete (swipe far enough) - increased to prevent accidental deletes
+    const deleteThreshold = -200
+    // Velocity threshold for quick swipe - increased for more intentional swipes
+    const velocityThreshold = -800
 
     if (offset < deleteThreshold || velocity < velocityThreshold) {
-      // Strong swipe or fast swipe -> delete
+      // Strong swipe or very fast swipe -> delete
       handleDelete()
     } else if (offset < openThreshold) {
       // Medium swipe -> snap to open position
@@ -87,8 +87,21 @@ export function ExpenseCard({ title, amount, paidBy, participants, date, index, 
     })
   }
 
-  const handleDeleteButtonClick = () => {
+  const handleDeleteButtonClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
     handleDelete()
+  }
+
+  const handleCardClick = () => {
+    // If card is swiped open, close it on tap
+    const currentX = x.get()
+    if (currentX < -10) {
+      animate(x, 0, {
+        type: "spring",
+        stiffness: 400,
+        damping: 30
+      })
+    }
   }
 
   return (
@@ -123,6 +136,7 @@ export function ExpenseCard({ title, amount, paidBy, participants, date, index, 
         dragConstraints={{ left: -deleteButtonWidth, right: 0 }}
         dragElastic={{ left: 0.1, right: 0 }}
         onDragEnd={handleDragEnd}
+        onClick={handleCardClick}
         className="bg-card rounded-2xl p-5 shadow-sm border border-border/50 relative cursor-grab active:cursor-grabbing touch-pan-y"
       >
         <div className="flex items-start justify-between gap-4">
