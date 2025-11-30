@@ -93,23 +93,26 @@ export default function ExpenseSplitter() {
       .channel(`group-${selectedGroupId}`)
       .on('postgres_changes',
         { event: '*', schema: 'public', table: 'expenses', filter: `group_id=eq.${selectedGroupId}` },
-        () => {
+        async () => {
           console.log('Realtime update: expenses changed')
-          queryClient.invalidateQueries({ queryKey: ['expenses', selectedGroupId] })
+          await queryClient.invalidateQueries({ queryKey: ['groups', currentUser?.id] })
+          await queryClient.refetchQueries({ queryKey: ['groups', currentUser?.id] })
         }
       )
       .on('postgres_changes',
         { event: '*', schema: 'public', table: 'group_members', filter: `group_id=eq.${selectedGroupId}` },
-        () => {
+        async () => {
           console.log('Realtime update: group members changed')
-          queryClient.invalidateQueries({ queryKey: ['groups', currentUser?.id] })
+          await queryClient.invalidateQueries({ queryKey: ['groups', currentUser?.id] })
+          await queryClient.refetchQueries({ queryKey: ['groups', currentUser?.id] })
         }
       )
       .on('postgres_changes',
         { event: '*', schema: 'public', table: 'groups', filter: `id=eq.${selectedGroupId}` },
-        () => {
+        async () => {
           console.log('Realtime update: group details changed')
-          queryClient.invalidateQueries({ queryKey: ['groups', currentUser?.id] })
+          await queryClient.invalidateQueries({ queryKey: ['groups', currentUser?.id] })
+          await queryClient.refetchQueries({ queryKey: ['groups', currentUser?.id] })
         }
       )
       .subscribe()

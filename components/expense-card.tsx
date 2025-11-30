@@ -77,13 +77,15 @@ export function ExpenseCard({ title, amount, paidBy, participants, date, index, 
 
     setIsDeleting(true)
 
-    // Animate out to the left
+    // Call onDelete immediately (optimistic)
+    onDelete()
+
+    // Then animate out
     animate(x, -400, {
       type: "spring",
       stiffness: 300,
-      damping: 25
-    }).then(() => {
-      onDelete()
+      damping: 25,
+      duration: 0.3
     })
   }
 
