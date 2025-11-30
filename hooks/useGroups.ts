@@ -1,19 +1,14 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { createClient } from '@/lib/supabase/client';
-import { type Group } from '@/lib/services/group.service';
+import { groupService, type Group } from '@/lib/services/group.service';
 
 export const useGroups = (userId: string | null) => {
     const queryClient = useQueryClient();
-    const supabase = createClient();
 
     const fetchGroups = async (): Promise<Group[]> => {
         if (!userId) return [];
-        const { data, error } = await supabase
-            .from('groups')
-            .select('*')
-            .eq('owner_id', userId);
-        if (error) throw error;
-        return data as Group[];
+        const { data, error } = await groupService.getUserGroups(userId);
+        if (error) throw new Error(error);
+        return data || [];
     };
 
     const groupsQuery = useQuery({
@@ -24,10 +19,12 @@ export const useGroups = (userId: string | null) => {
     });
 
     const addGroupMutation = useMutation({
-        mutationFn: async (newGroup: Partial<Group>) => {
-            const { data, error } = await supabase.from('groups').insert(newGroup as any).select().single();
-            if (error) throw error;
-            return data as Group;
+        mutationFn: async (newGroup: { name: string; emoji: string; members: string[]; currency?: any }) => {
+            if (!userId) throw new Error('User ID is required');
+            const { data, error } = await groupService.createGroup(userId, newGroup);
+            if (error) throw new Error(error);
+            if (!data) throw new Error('Failed to create group');
+            return data;
         },
         onSuccess: (group) => {
             queryClient.setQueryData(['groups', userId], (old: Group[] | undefined) => {
