@@ -96,16 +96,71 @@ export default function ExpenseSplitter() {
       .channel(`user-data-${currentUser.id}`)
       .on('postgres_changes',
         { event: '*', schema: 'public', table: 'expenses' },
-        async () => {
-          console.log('Realtime update: expenses changed')
-          await queryClient.invalidateQueries({ queryKey: ['groups', currentUser.id] })
-          await queryClient.refetchQueries({ queryKey: ['groups', currentUser.id] })
+        async (payload) => {
+          console.log('Realtime update: expenses changed', payload)
+
+          // Optimización: Actualizar caché manualmente en lugar de refetch total
+          const queryKey = ['groups', currentUser.id]
+
+          if (payload.eventType === 'DELETE') {
+            // Eliminar del caché inmediatamente
+            queryClient.setQueryData(queryKey, (oldGroups: Group[] | undefined) => {
+              if (!oldGroups) return oldGroups
+
+              return oldGroups.map(group => {
+                // Si tenemos group_id en el payload (REPLICA IDENTITY FULL), optimizamos
+                if (payload.old.group_id && group.id !== payload.old.group_id) {
+                  return group
+                }
+
+                // Si no, buscamos en todos los grupos (o si coincide el ID)
+                return {
+                  ...group,
+                  expenses: group.expenses.filter(e => e.id !== payload.old.id)
+                }
+              })
+            })
+          } else if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+            // Para INSERT/UPDATE necesitamos los detalles completos (joins)
+            // Fetch solo de este gasto, mucho más rápido que refetch de todo
+            const { data: newExpense, error } = await expenseService.getExpenseDetails(payload.new.id)
+
+            if (!error && newExpense) {
+              queryClient.setQueryData(queryKey, (oldGroups: Group[] | undefined) => {
+                if (!oldGroups) return oldGroups
+
+                return oldGroups.map(group => {
+                  if (group.id !== newExpense.group_id) return group
+
+                  const existingExpenseIndex = group.expenses.findIndex(e => e.id === newExpense.id)
+                  let updatedExpenses = [...group.expenses]
+
+                  if (existingExpenseIndex >= 0) {
+                    // UPDATE: Reemplazar existente
+                    updatedExpenses[existingExpenseIndex] = newExpense
+                  } else {
+                    // INSERT: Agregar nuevo al principio (ordenado por fecha)
+                    updatedExpenses = [newExpense, ...updatedExpenses]
+                  }
+
+                  // Re-ordenar por fecha si es necesario (opcional, pero bueno para consistencia)
+                  updatedExpenses.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+
+                  return {
+                    ...group,
+                    expenses: updatedExpenses
+                  }
+                })
+              })
+            }
+          }
         }
       )
       .on('postgres_changes',
         { event: '*', schema: 'public', table: 'group_members' },
         async () => {
           console.log('Realtime update: group members changed')
+          // Members changes are rare, keep full refetch for safety
           await queryClient.invalidateQueries({ queryKey: ['groups', currentUser.id] })
           await queryClient.refetchQueries({ queryKey: ['groups', currentUser.id] })
         }
@@ -114,6 +169,7 @@ export default function ExpenseSplitter() {
         { event: '*', schema: 'public', table: 'groups' },
         async () => {
           console.log('Realtime update: group details changed')
+          // Group details changes are rare, keep full refetch
           await queryClient.invalidateQueries({ queryKey: ['groups', currentUser.id] })
           await queryClient.refetchQueries({ queryKey: ['groups', currentUser.id] })
         }

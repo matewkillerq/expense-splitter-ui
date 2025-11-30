@@ -100,4 +100,53 @@ export const expenseService = {
             }
         }
     },
+
+    /**
+     * Obtener detalles de un gasto específico
+     */
+    async getExpenseDetails(expenseId: string): Promise<{ data: any | null; error: string | null }> {
+        try {
+            const supabase = createClient() as any
+
+            // 1. Obtener el gasto
+            const { data: expense, error: expenseError } = await supabase
+                .from('expenses')
+                .select('*')
+                .eq('id', expenseId)
+                .single()
+
+            if (expenseError) throw expenseError
+
+            // 2. Obtener payers
+            const { data: payers } = await supabase
+                .from('expense_payers')
+                .select('user_id, username, profiles(username)')
+                .eq('expense_id', expenseId)
+
+            // 3. Obtener participants
+            const { data: participants } = await supabase
+                .from('expense_participants')
+                .select('user_id, username, profiles(username)')
+                .eq('expense_id', expenseId)
+
+            return {
+                data: {
+                    id: expense.id,
+                    title: expense.title,
+                    amount: Number(expense.amount),
+                    paidBy: payers?.map((p: any) => p.profiles?.username || p.username) || [],
+                    participants: participants?.map((p: any) => p.profiles?.username || p.username) || [],
+                    date: expense.created_at,
+                    group_id: expense.group_id
+                },
+                error: null
+            }
+        } catch (error) {
+            console.error('Get expense details error:', error)
+            return {
+                data: null,
+                error: error instanceof Error ? error.message : 'Failed to fetch expense details'
+            }
+        }
+    },
 }
